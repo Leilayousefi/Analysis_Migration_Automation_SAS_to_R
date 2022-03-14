@@ -1,0 +1,187 @@
+install.packages("devtools")
+library(devtools)
+
+#>
+#> Attaching package: 'testthat'
+#> The following object is masked from 'package:devtools':
+#>
+#>     test_file
+devtools::session_info()
+
+
+#> create package
+
+## devtools::create("/home/leila-yousefi/R_Projects/RecruitmentTimeToHire)")
+
+library(RecruitmentTimeToHire)
+
+
+install.packages("remotes")
+library(remotes)
+
+remotes::install_git("git@github.com:moj-analytical-services/Rs3tools.git")
+
+
+# install renv if it doesn't exist on your system
+if(!"renv" %in% installed.packages()[, "Package"]) install.packages("renv")
+# Remove bare = TRUE if you'd like to move your existing packages over to
+# renv. This is not a good idea if you're migrating from s3tools as
+# renv will attempt to install that library.
+renv::init(bare = TRUE)
+# Tell renv to use Python and set up a virtual environment
+# if you get an error here, remove the python path argument and
+# manually select the version of python you require
+#
+# If this process goes wrong run
+
+## renv::deactivate()
+## in the terminal and
+
+## rm -rf renv renv.lock .Rprofile requirements.txt
+
+#
+#
+renv::use_python(python='/usr/bin/python')
+#renv::use_python('renv/venv/bin/python')
+
+# Install reticulate so we can make calls to Python libraries, required by botor
+renv::install('reticulate')
+
+# Install the Python library, boto3, used by botor to access S3
+reticulate::py_install('boto3')
+
+# Install botor itself
+renv::install('botor')
+
+#remotes::install_git("git@github.com:moj-analytical-services/botor.git")
+
+
+#
+#
+renv::use_python(python='/usr/bin/python')
+#renv::use_python('renv/venv/bin/python')
+
+# Install reticulate so we can make calls to Python libraries, required by botor
+renv::install('reticulate')
+
+# Install the Python library, boto3, used by botor to access S3
+reticulate::py_install('boto3')
+
+# Install botor itself
+renv::install('botor')
+
+#remotes::install_git("git@github.com:moj-analytical-services/botor.git")
+
+
+# git clone git@github.com:moj-analytical-services/user-guidance.git
+
+##renv::install("botor@0.3.0")
+
+
+## if error in terminal:
+## and restart your R session.
+## On earlier test versions it’s not quite that simple:
+## First open your project, and in the console run
+##
+## if(!"renv" %in% installed.packages()[, "Package"]) install.packages("renv")
+# Remove bare = TRUE if you'd like to move your existing packages over to
+# renv. This is not a good idea if you're migrating from s3tools as
+# renv will attempt to install that library.
+##renv::init(bare = TRUE)
+##
+## create a Python virtual environment.
+# python3 -m venv renv/venv --without-pip --system-site-packages
+#
+#
+## Not run:
+
+# use python with a project
+##renv::use_python()
+
+# use python with a project; create the environment
+# within the project directory in the '.venv' folder
+##renv::use_python(name = ".venv")
+
+# use python with a pre-existing virtual environment located elsewhere
+##renv::use_python(name = "~/.virtualenvs/env")
+
+# use virtualenv python with a project
+##renv::use_python(type = "virtualenv")
+
+# use conda python with a project
+##renv::use_python(type = "conda")
+
+## End(Not run)
+##~/.virtualenvs/venv/bin/python
+###renv::use_python(type = "auto")
+
+
+#renv::install('Rcpp@1.0.7')
+#
+
+###
+###
+###
+#### Install reticulate so we can make calls to Python libraries, required by
+# botor
+
+
+
+
+#in the terminal and
+
+#rm -rf renv renv.lock .Rprofile requirements.txt
+#in the terminal, restart your R session, and start again.
+
+#You should now be able to use library(botor) as usual, and renv::snapshot()
+#to lock the R and Python library versions for recreation by collaborators or within a deployment.
+
+#dbtools (i.e. the R wrapper for pydbtools)
+#is the data engineering maintained package for accessing Athena databases
+#from R. It requires a little setup:
+
+##renv::use_python()
+
+## reticulate::py_install("pydbtools")
+
+remotes::install_github("moj-analytical-services/dbtools")
+
+#
+renv::consent()
+
+## #################  Installing Required Pachages  ######################## ##
+##
+##
+packages = c("usethis", "roxygen2", "testthat", "tidyverse", "knitr", "tidyr", "dplyr", "ggplot2", "stringr", "dplyr", "data.table", "datasets")#, "botor", "moj-analytical-services/mojverse", "moj-analytical-services/mojrap") #, "moj-analytical-services/xltabr", "s3tools", "aws.s3"
+
+## Now load or install and load all packages listed above
+package.check <- lapply(
+  packages,
+  FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+      install.packages(x, dependencies = TRUE)
+      library(x, character.only = TRUE)
+    }
+  }
+)
+install.packages("aws.s3")
+library(aws.s3)
+## Updating the licence
+##
+use_mit_license()
+
+## Edit DESCRIPTION
+##
+##
+## Creating git workflow
+##
+#git-crypt status
+#
+##
+
+##
+#install()
+##
+#
+#Edit DESCRIPTION
+#
