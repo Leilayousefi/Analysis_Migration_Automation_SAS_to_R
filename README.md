@@ -12,19 +12,42 @@ This list was created to quickly translate a SAS code to its equivalent in R.
 
 ### create tables in R:
 
-#### Method 1: Create a table from existing data.
+#### SAS:
+```SAS
+PROC SQL;
+CREATE TABLE WORK.maindatabase AS 
+SELECT t1.
+FROM TTHTTS.allapplfinal_final t1;
+QUIT;
+```
+
+##### R:
+###### Method 1: Create a table from existing data.
 
 ```R
 tab <- table(df$row_variable, df$column_variable)
 ```
 
-#### Method 2: Create a table from scratch.
+###### Method 2: Create a table from scratch.
 
 ```R
 tab <- matrix(c(7, 5, 14, 19, 3, 2, 17, 6, 12), ncol=3, byrow=TRUE)
 colnames(tab) <- c('colName1','colName2','colName3')
 rownames(tab) <- c('rowName1','rowName2','rowName3')
 tab <- as.table(tab)
+```
+
+### convert to data table:
+#### SAS:
+```SAS
+data work.maindatabase;
+          set TTHTTS.allapplfinal_final_mar21v1;*/
+run;
+```
+
+##### R:
+```R
+data.table::fread(work.maindatabase)
 ```
 
 ### Loading data from a data file
@@ -43,6 +66,8 @@ PROC IMPORT DATAFILE="example.csv";
 ##### R:
  
 ```R
+## if csv file was saved locally
+#csv_file<-read.csv(path, stringsAsFactors = FALSE)
 d = read.csv('example.csv')
 ```
 
