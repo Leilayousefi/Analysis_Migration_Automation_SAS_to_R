@@ -10,6 +10,19 @@ This list was created to quickly translate a SAS code to its equivalent in R.
 
 ## Importing / Reading Data 
 
+### create tables in R:
+
+#### Method 1: Create a table from existing data.
+
+tab <- table(df$row_variable, df$column_variable)
+
+#### Method 2: Create a table from scratch.
+
+tab <- matrix(c(7, 5, 14, 19, 3, 2, 17, 6, 12), ncol=3, byrow=TRUE)
+colnames(tab) <- c('colName1','colName2','colName3')
+rownames(tab) <- c('rowName1','rowName2','rowName3')
+tab <- as.table(tab)
+
 ### Loading data from a data file
 
 In this example, the file in CSV format.
