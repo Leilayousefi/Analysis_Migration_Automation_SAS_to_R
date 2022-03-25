@@ -152,9 +152,12 @@ renv::consent()
 ## #################  Installing Required Pachages  ######################## ##
 ##
 ##
-packages = c("usethis", "roxygen2", "testthat", "tidyverse", "knitr", "tidyr", "dplyr", "ggplot2", "stringr", "dplyr", "data.table", "datasets")#, "botor", "moj-analytical-services/mojverse", "moj-analytical-services/mojrap") #, "moj-analytical-services/xltabr", "s3tools", "aws.s3"
+remotes::install_github("moj-analytical-services/dbtools")
 
-## Now load or install and load all packages listed above
+packages = c("usethis", "roxygen2", "devtools", "testthat", "tidyverse", "knitr", "tidyr", "dplyr", "dbplyr", "haven", "ggplot2", "stringr", "datasets", "rmarkdown", "timeDate", "bizdays")#, "botor", "moj-analytical-services/mojverse", "moj-analytical-services/mojrap") # "xltabr", "moj-analytical-services/xltabr", "s3tools", "aws.s3"
+
+## load or install and load all packages listed above
+## 
 package.check <- lapply(
   packages,
   FUN = function(x) {
@@ -164,6 +167,20 @@ package.check <- lapply(
     }
   }
 )
+
+#library(haven) #for reading SAS dataset
+#
+install.packages("aws.s3",  "data.table", "bit64")
+#devtools::install_github("tidyverse/forcats")
+#devtools::install_github("garrettgman/DSR",force = TRUE)
+devtools::install_version('text2vec', version='0.5.1')
+
+library(data.table)
+library(aws.s3)
+library(bit64) 
+library(text2vec)
+#library()
+#library()
 install.packages("aws.s3")
 library(aws.s3)
 ## Updating the licence
