@@ -1,7 +1,41 @@
 # Analysis_Migration_Automation_SAS_to_R
 Data Analysis for Complex data & Migration & Automation SAS to R
 
+# To Do List
+## Working with data
+repeating three main processes:
+### 1. Reading the data.
+### 2. Data Analysis and Transformation.
+### 3. Data Visualization and Reporting.
 
+# Data objects
+http://r-pkgs.had.co.nz/data.html
+
+# RAP package
+https://github.com/DCMSstats/eesectors
+
+# roxygen2 documentation
+https://cran.r-project.org/web/packages/roxygen2/vignettes/roxygen2.html
+
+# S3 classes
+http://adv-r.had.co.nz/OO-essentials.html#s3
+
+# eesectors convert to class with checks
+# convert all that expert domain knowledge into quality assurance
+# good example of using a custom class
+https://github.com/DCMSstats/eesectors/blob/master/R/year_sector_data.R
+
+# error logging
+advanced toolkit
+this allows personalised condition handling messages based on the user
+for example a package user might jsut want to know whether the data passed the checks or not, whereas the creator might want to know more detailed diagnostics of the checks run
+https://github.com/zatonovo/futile.logger
+
+#Testing the input data summary
+https://ukgovdatascience.github.io/rap_companion/qa-data.html
+##
+## -------------------------------------------------------------------------------------------------------------------
+##
 # Migrating SAS to R
 
 # *SAS to R cheatsheet* 
