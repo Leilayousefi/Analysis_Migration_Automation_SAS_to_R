@@ -1,5 +1,5 @@
-title: "TTH_SAS_to_R"
-output: github_document
+title: "migration_SAS_to_R_QA_RAP"
+output: Specification github document
 ---
 
 Author: Leila Yousefi
@@ -12,6 +12,86 @@ Author: Leila Yousefi
    So that the service can be changed on a very frequent basis
    And so that changes do not cause problems for users
    
+   
+# PROJECT NAME AND DESCRIPTION
+ 
+ 
+
+
+# PURPOSE / GOALS
+   
+   
+
+# ASSUMPTIONS
+   
+   
+
+# MEASUREMENTS OF SUCCESS
+   
+   
+
+# RISK FACTORS
+   
+   
+
+# APPROACH
+   
+
+
+
+
+
+
+# SCOPE OF WORK
+## FUNCTIONS / PROCESSES IMPACTED BY PROJECT
+
+### IN SCOPE	 
+	 
+	 
+	 
+### OUT OF SCOPE	 
+	 
+	 
+	 
+### UNCERTAIN	 
+	 
+	 
+	 
+## INTERDEPENDENCIES / REPLACEMENT / CONSOLIDATION WITH OTHER SERVICES, PROJECTS, AND SYSTEMS
+
+
+### IN SCOPE	 
+	 
+	 
+	 
+### OUT OF SCOPE	 
+	 
+	 
+	 
+### UNCERTAIN	 
+	 
+	 
+
+# TIMELINE / MILESTONES
+
+   
+## OVERVIEW	 
+
+   
+   
+### MILESTONE	
+
+   
+   
+### DEADLINE
+
+
+   
+## -----------------------------------------------------------
+If you would find it easier then you could just write your description and details of each code in a word document and share it in here then I will add it to the corresponding file in the git repository. e.g., r7_TTHsummary.R  : provides breakdowns for different parts of MoJ by producing summary stats for TTH. Iner process includes ... Inputs ... . Outputs ....
+   
+## -----------------------------------------------------------
+
 # 2. There is a need for a clear policy around the sensitivity of source code   
 
    So that I understand the controls that need to be in place
@@ -21,19 +101,30 @@ Author: Leila Yousefi
    So that I can release changes to production quickly
    And so that we can meet our obligation to the Digital by Default Service Standard
    
-# 4. There is a need to switch to a suitable database server
-   As a web operations engineer working on the service
+   Use declarative formats for setup automation, to minimize time and cost for new developers joining the project;
+# 4. There is a need to switch to a suitable database 
+   (using S3 buckets and queies in Athena)
    So that data can be stored in a manner befitting its structure
    And so the stored data can be queried as quickly as required
+   
+Are suitable for deployment on modern cloud platforms, obviating the need for servers and systems administration;
+Minimize divergence between development and production, enabling continuous deployment for maximum agility;
+And can scale up without significant changes to tooling, architecture, or development practices.
+
 
 # 5. It is required that database migrations to be deployed through the same sequence of environments as code changes
    So that I can have confidence that database migration scripts will work when applied to production
    
 # 6. There is need to use automatic unit testing as well as logging
    So that I can easily see everything that is happening in specific applications
-   
-   
-## -----------------------------------------------------------
+e.g., 
+Automate testing
+
+exploratory testing
+user testing
+performance testing
+
+   If your software needs a database to be present to operate effectively, your smoke test should exercise an application code path that will fail if the database is not present or returns an error.
 
 ## See more information and examples:
 https://mojdigital.blog.gov.uk/2015/07/29/helping-people-with-court-fees/
@@ -78,7 +169,7 @@ However, User Requirements describe the end-user requirements for a system. Func
 
 # Descriptions of data to be entered into the system
 
-# Descriptions of operations performed by each screen
+# Descriptions of operations performed by each code
 
 # Descriptions of work-flows performed by the system
 
@@ -279,9 +370,19 @@ Timestamp of application submission.
 Unique identifier for each application. Each row of our data is a different application.
 <br><br>
 
+   
+## -----------------------------------------------------------   
 ## please continue by adding next columns ...
 
 <hr style='height:1px;border:none;color:black;background-color:black'>
 
-   
-   if it is easier then you could just write your description and details of each code in a word document and share it in here then I will add it to the corresponding file in the git repository. e.g., r7_TTHsummary.R  : provides breakdowns for different parts of MoJ by producing summary stats for TTH. Iner process includes ... Inputs ... . Outputs ....
+
+
+ 	 
+ 	 
+ 	 
+ 	 
+ 	 
+ 	 
+ 	 
+ 	 
