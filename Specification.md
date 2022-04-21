@@ -219,3 +219,69 @@ TidyNINumber
 (if they are NULL, the corresponding rows should be deleted.)
 
 ## -----------------------------------------------------------
+## Data Description 
+
+Instruction:
+
+In TTH_maindatabase_description.md add to our knowledge about the main TTH table. 
+Click the edit links below to contribute via GitHub and follow these instructions:
+
+Open feature/Data-Description branch off the main branch (add your content and commit as Added column name)
+
+
+Make a pull request into the main branch and in the description state that you are providing explanation regarding the corresponding content in the design file.
+
+# Table: maindatabase
+
+| Feature | Details |
+|---|---|
+| **Description** | |
+| **Format** | parquet|
+| **Database** | xhibit_v1 |
+| **Column Partitions** | None |
+| **Location** | s3://alpha-hr-arm-main/data/oleeo_data/processed_data/recruitment_main_data/Jan-22/ |
+
+## Description
+
+
+There's nothing here yet.
+## Table Columns
+
+Details about the columns in the table.
+
+<br>
+
+<hr style='height:1px;border:none;color:black;background-color:black'>
+
+### Column: SubmissionDate
+
+
+| Feature | Details |
+|---|---|
+| **type** | date|
+| **description** |  |
+| **nullable** | False |
+
+Timestamp of application submission.
+<br><br>
+
+<hr style='height:1px;border:none;color:black;background-color:black'>
+
+### Column: applicationid
+
+
+| Feature | Details |
+|---|---|
+| **type** | character|
+| **description** |  |
+| **nullable** | True |
+
+Unique identifier for each application. Each row of our data is a different application.
+<br><br>
+
+## please continue by adding next columns ...
+
+<hr style='height:1px;border:none;color:black;background-color:black'>
+
+   
+   if it is easier then you could just write your description and details of each code in a word document and share it in here then I will add it to the corresponding file in the git repository. e.g., r7_TTHsummary.R  : provides breakdowns for different parts of MoJ by producing summary stats for TTH. Iner process includes ... Inputs ... . Outputs ....
