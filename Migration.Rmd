@@ -6,75 +6,14 @@ output: github_document
 
 Author: Leila Yousefi
 
-## See more information and examples:
-https://mojdigital.blog.gov.uk/2015/07/29/helping-people-with-court-fees/
-
-## user-centred design ---------------------------------------
-Developing digital prototypes to replace aspects of business 
-that are entirely paper-based or ambiguous
-
-# Writing User Stories
-The most common template for writing a User Story:
-
-As a <user type>, I want <some goal> so that <some reason>.
-
-In other words, we are answering the following questions:
-
-Who: For whose benefit are we doing this?
-
-What: What are we doing?
-
-Why: Why are we doing this?
-
-# Defining Conditions of Satisfaction
-
-# Creating workflow diagrams
-
-# The use of wireframes and visual designs
-
-# Defining nonfunctional requirements
-
-# Creating test tables and test scenarios
-
-Basing service design on user needs is essential to ensure quality and
-reduce the cost of failure waste/
 
 ## User Requirements Specifications 
 User Requirements Specifications are a valuable tool for ensuring the system will do what users need it to do. In Retrospective Validation, where an existing system is being validated, user requirements are equivalent to the Functional Requirements.
 However, User Requirements describe the end-user requirements for a system. Functional Requirements describe what the system must do.
 
-## Functional Requirements should include:
-
-# Descriptions of data to be entered into the system
-# Descriptions of operations performed by each screen
-# Descriptions of work-flows performed by the system
-# Descriptions of system reports or other outputs
-# Who can enter the data into the system
-# How the system meets applicable regulatory requirements
-
 The Functional Requirements Specification is designed to be read by a general audience. Readers should understand the system, but no particular technical knowledge should be required to understand the document.
 
-# Interface requirements
 
-Field 1 accepts numeric data entry.
-Field 2 only accepts dates before the current date.
-Screen 1 can print on-screen data to the printer.
-Business Requirements
-
-Data must be entered before a request can be approved.
-Clicking the Approve button moves the request to the Approval Workflow.
-All personnel using the system will be trained according to internal SOP AA-101.
-Regulatory/Compliance Requirements
-
-The database will have a functional audit trail.
-The system will limit access to authorized users.
-The spreadsheet can secure data with electronic signatures.
-Security Requirements
-
-Members of the Data Entry group can enter requests but can not approve or delete requests.
-Members of the Managers group can enter or approve a request but can not delete requests.
-Members of the Administrators group cannot enter or approve requests but can delete requests.
-Depending on the system being described, different categories of requirements are appropriate. System Owners, Key End-Users, Developers, Engineers, and Quality Assurance should all participate in the requirement gathering process, as appropriate to the system.
 # 1. There is a need for a well documented and understood development process
    
    So that we can ensure a high level of quality
@@ -108,24 +47,6 @@ Depending on the system being described, different categories of requirements ar
 
 ## Questions ------------------------------------------------------
 
-1. Please describe the following variables and the need for using them as a key feature:
-
-
-## -----------------------------------------------------------
-2. Regarding the above variables, could you identify the primary and secondary keys?
-
-## -----------------------------------------------------------
-
-3. Could you please determine whether missing values and the imputation strategy based upon the above variables:
-
-
-## -----------------------------------------------------------
-2. Regarding the above variables, dates variables? which dates are the key features and should not be NULL 
-(if they are NULL, the corresponding rows should be deleted.)
-
-## -----------------------------------------------------------
-For more learning see:
-https://github.com/Leilayousefi/Analysis_Migration_Automation_SAS_to_R/blob/main/README.md
 ## -----------------------------------------------------------
 
 
