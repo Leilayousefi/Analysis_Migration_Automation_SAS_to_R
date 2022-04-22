@@ -1,0 +1,3341 @@
+---
+
+title: "TTH_SAS_to_R"
+output: github_document
+---
+
+Author: Leila Yousefi
+
+## See more information and examples:
+https://mojdigital.blog.gov.uk/2015/07/29/helping-people-with-court-fees/
+
+## user-centred design ---------------------------------------
+Developing digital prototypes to replace aspects of business 
+that are entirely paper-based or ambiguous
+
+# Writing User Stories
+The most common template for writing a User Story:
+
+As a <user type>, I want <some goal> so that <some reason>.
+
+In other words, we are answering the following questions:
+
+Who: For whose benefit are we doing this?
+
+What: What are we doing?
+
+Why: Why are we doing this?
+
+# Defining Conditions of Satisfaction
+
+# Creating workflow diagrams
+
+# The use of wireframes and visual designs
+
+# Defining nonfunctional requirements
+
+# Creating test tables and test scenarios
+
+Basing service design on user needs is essential to ensure quality and
+reduce the cost of failure waste/
+
+## User Requirements Specifications 
+User Requirements Specifications are a valuable tool for ensuring the system will do what users need it to do. In Retrospective Validation, where an existing system is being validated, user requirements are equivalent to the Functional Requirements.
+However, User Requirements describe the end-user requirements for a system. Functional Requirements describe what the system must do.
+
+## Functional Requirements should include:
+
+# Descriptions of data to be entered into the system
+# Descriptions of operations performed by each screen
+# Descriptions of work-flows performed by the system
+# Descriptions of system reports or other outputs
+# Who can enter the data into the system
+# How the system meets applicable regulatory requirements
+
+The Functional Requirements Specification is designed to be read by a general audience. Readers should understand the system, but no particular technical knowledge should be required to understand the document.
+
+# Interface requirements
+
+Field 1 accepts numeric data entry.
+Field 2 only accepts dates before the current date.
+Screen 1 can print on-screen data to the printer.
+Business Requirements
+
+Data must be entered before a request can be approved.
+Clicking the Approve button moves the request to the Approval Workflow.
+All personnel using the system will be trained according to internal SOP AA-101.
+Regulatory/Compliance Requirements
+
+The database will have a functional audit trail.
+The system will limit access to authorized users.
+The spreadsheet can secure data with electronic signatures.
+Security Requirements
+
+Members of the Data Entry group can enter requests but can not approve or delete requests.
+Members of the Managers group can enter or approve a request but can not delete requests.
+Members of the Administrators group cannot enter or approve requests but can delete requests.
+Depending on the system being described, different categories of requirements are appropriate. System Owners, Key End-Users, Developers, Engineers, and Quality Assurance should all participate in the requirement gathering process, as appropriate to the system.
+# 1. There is a need for a well documented and understood development process
+   
+   So that we can ensure a high level of quality
+   And so we can maximise the integrity of the source code
+   
+   So that the service can be changed on a very frequent basis
+   And so that changes do not cause problems for users
+   
+# 2. There is a need for a clear policy around the sensitivity of source code   
+
+   So that I understand the controls that need to be in place
+   And so that I know who and how I may share it
+   
+# 3. There is a need for a documented process for evaluating and deciding on a change to the production service
+   So that I can release changes to production quickly
+   And so that we can meet our obligation to the Digital by Default Service Standard
+   
+# 4. There is a need to switch to a suitable database server
+   As a web operations engineer working on the service
+   So that data can be stored in a manner befitting its structure
+   And so the stored data can be queried as quickly as required
+
+# 5. It is required that database migrations to be deployed through the same sequence of environments as code changes
+   So that I can have confidence that database migration scripts will work when applied to production
+   
+# 6. There is need to use automatic unit testing as well as logging
+   So that I can easily see everything that is happening in specific applications
+   
+   
+## -----------------------------------------------------------
+
+## Questions ------------------------------------------------------
+
+1. Please describe the following variables and the need for using them as a key feature:
+
+
+## -----------------------------------------------------------
+2. Regarding the above variables, could you identify the primary and secondary keys?
+
+## -----------------------------------------------------------
+
+3. Could you please determine whether missing values and the imputation strategy based upon the above variables:
+
+
+## -----------------------------------------------------------
+2. Regarding the above variables, dates variables? which dates are the key features and should not be NULL 
+(if they are NULL, the corresponding rows should be deleted.)
+
+## -----------------------------------------------------------
+For more learning see:
+https://github.com/Leilayousefi/Analysis_Migration_Automation_SAS_to_R/blob/main/README.md
+## -----------------------------------------------------------
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+## Clean out the global environment and restart R -----------------------------
+## 
+## removing all environment variables
+rm(list = ls())
+
+## cleanup
+
+gc() 
+```
+
+## GitHub Documents
+
+This is an R Markdown format used for publishing markdown documents to GitHub. When you click the **Knit** button all R code chunks are run and a markdown file (.md) suitable for publishing to GitHub is generated.
+R Markdown
+
+## ################################################################ ##
+## ################################################################ ##
+-	Setup – sets dates used in processing, sets source location for mapping files.
+-	Import main database – imports input dataset – currently as a SAS dataset, but this will be a .csv file for the R process.
+-	There is a step adding labels for various types of recruitment. 
+-	The remaining steps are just providing breakdowns for different parts of MoJ (grouping and then producing summary stats)
+-	Output files for each set of breakdowns are produced in .csv format.
+
+
+## ################################################################ ##
+## ################################################################ ##
+
+## ########################## SAS to R ############################ ##
+## Installation
+
+# Run installationGuide.R
+```{r}
+install.packages("devtools")
+library(devtools)
+
+#>
+#> Attaching package: 'testthat'
+#> The following object is masked from 'package:devtools':
+#>
+#>     test_file
+devtools::session_info()
+
+
+#> create package
+
+## devtools::create("/home/leila-yousefi/R_Projects/RecruitmentTimeToHire)")
+
+#library(RecruitmentTimeToHire)
+
+
+install.packages("remotes")
+library(remotes)
+
+remotes::install_git("git@github.com:moj-analytical-services/Rs3tools.git")
+
+
+# install renv if it doesn't exist on your system
+if(!"renv" %in% installed.packages()[, "Package"]) install.packages("renv")
+# Remove bare = TRUE if you'd like to move your existing packages over to
+# renv. This is not a good idea if you're migrating from s3tools as
+# renv will attempt to install that library.
+renv::init(bare = TRUE)
+# Tell renv to use Python and set up a virtual environment
+# if you get an error here, remove the python path argument and
+# manually select the version of python you require
+#
+# If this process goes wrong run
+
+## renv::deactivate()
+## in the terminal and
+
+## rm -rf renv renv.lock .Rprofile requirements.txt
+
+#
+#
+renv::use_python(python='/usr/bin/python')
+#renv::use_python('renv/venv/bin/python')
+
+# Install reticulate so we can make calls to Python libraries, required by botor
+renv::install('reticulate')
+
+# Install the Python library, boto3, used by botor to access S3
+reticulate::py_install('boto3')
+
+# Install botor itself
+renv::install('botor')
+
+#remotes::install_git("git@github.com:moj-analytical-services/botor.git")
+
+
+#
+#
+renv::use_python(python='/usr/bin/python')
+#renv::use_python('renv/venv/bin/python')
+
+# Install reticulate so we can make calls to Python libraries, required by botor
+renv::install('reticulate')
+
+# Install the Python library, boto3, used by botor to access S3
+reticulate::py_install('boto3')
+
+# Install botor itself
+renv::install('botor')
+
+#remotes::install_git("git@github.com:moj-analytical-services/botor.git")
+
+
+# git clone git@github.com:moj-analytical-services/user-guidance.git
+
+##renv::install("botor@0.3.0")
+
+
+## if error in terminal:
+## and restart your R session.
+## On earlier test versions it’s not quite that simple:
+## First open your project, and in the console run
+##
+## if(!"renv" %in% installed.packages()[, "Package"]) install.packages("renv")
+# Remove bare = TRUE if you'd like to move your existing packages over to
+# renv. This is not a good idea if you're migrating from s3tools as
+# renv will attempt to install that library.
+##renv::init(bare = TRUE)
+##
+## create a Python virtual environment.
+# python3 -m venv renv/venv --without-pip --system-site-packages
+#
+#
+## Not run:
+
+# use python with a project
+##renv::use_python()
+
+# use python with a project; create the environment
+# within the project directory in the '.venv' folder
+##renv::use_python(name = ".venv")
+
+# use python with a pre-existing virtual environment located elsewhere
+##renv::use_python(name = "~/.virtualenvs/env")
+
+# use virtualenv python with a project
+##renv::use_python(type = "virtualenv")
+
+# use conda python with a project
+##renv::use_python(type = "conda")
+
+## End(Not run)
+##~/.virtualenvs/venv/bin/python
+###renv::use_python(type = "auto")
+
+
+#renv::install('Rcpp@1.0.7')
+#
+
+###
+###
+###
+#### Install reticulate so we can make calls to Python libraries, required by
+# botor
+
+
+
+
+#in the terminal and
+
+#rm -rf renv renv.lock .Rprofile requirements.txt
+#in the terminal, restart your R session, and start again.
+
+#You should now be able to use library(botor) as usual, and renv::snapshot()
+#to lock the R and Python library versions for recreation by collaborators or within a deployment.
+
+#dbtools (i.e. the R wrapper for pydbtools)
+#is the data engineering maintained package for accessing Athena databases
+#from R. It requires a little setup:
+
+##renv::use_python()
+
+## reticulate::py_install("pydbtools")
+
+remotes::install_github("moj-analytical-services/dbtools")
+
+#--following R packages are required for connecting R with Athena
+# Install Rdbtools
+renv::install("moj-analytical-services/Rdbtools")
+library(Rdbtools)
+#
+renv::consent()
+
+
+## Updating the licence
+##
+use_mit_license()
+
+## Edit DESCRIPTION
+##
+##
+## Creating git workflow
+##
+#git-crypt status
+#
+##
+
+##
+#install()
+library(RecruitmentTimeToHire)
+##
+#
+#Edit DESCRIPTION
+#
+```
+
+## Installing required package: 
+
+## #################  Installing Required Pachages  ######################## ##
+
+```{r}
+remotes::install_github("moj-analytical-services/dbtools")
+
+packages = c("usethis", "roxygen2", "devtools", "testthat", "tidyverse", "knitr", "tidyr", "dplyr", "dbplyr", "haven", "ggplot2", "stringr", "datasets", "rmarkdown", "timeDate", "bizdays")#, "botor", "moj-analytical-services/mojverse", "moj-analytical-services/mojrap") # "xltabr", "moj-analytical-services/xltabr", "s3tools", "aws.s3"
+
+## load or install and load all packages listed above
+## 
+package.check <- lapply(
+  packages,
+  FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+      install.packages(x, dependencies = TRUE)
+      library(x, character.only = TRUE)
+    }
+  }
+)
+
+#library(haven) #for reading SAS dataset
+#
+install.packages("aws.s3",  "data.table", "bit64")
+#devtools::install_github("tidyverse/forcats")
+#devtools::install_github("garrettgman/DSR",force = TRUE)
+devtools::install_version('text2vec', version='0.5.1')
+
+install.packages("moj-analytical-services/Rdbtools")
+
+library(Rdbtools)
+library(data.table)
+library(aws.s3)
+library(bit64) 
+library(text2vec)
+#library()
+#library()
+```
+
+
+## Including Code
+
+You can include R code in the document as follows:
+
+## ################################################################ ##
+## ################################################################ ##
+## 1-	Setup 
+# – sets dates used in processing, sets source location for mapping files.
+
+
+## ########################## SAS code ############################ ##
+```{sas}
+/*Set Up*/
+
+/* – sets dates used in processing*/
+options mprint symbolgen;
+
+/*Set dates*/
+
+%let date1 = '01Mar2017'd;/*Oldest month - doesn't need updating*/
+%let date2 = '01Jan2022'd; /*Most recent month*/
+%let date3 = '01Oct2019'd; /*For past 24 months of data*/
+%let histmonth = '01Sep2021'd;/*For past 4 months of data*/
+
+/* – sets source location for mapping files*/
+
+/*Import Data (MoJ HQ location coordinates.csv) BNA*/
+/*%let location = \\dom1.infra.int\data\hq\102PF\Shared\Group_LCDSHD2\Analytical Services\CICFAS\Teams\HR-ARM\HR Analysis\Time to Hire\2021\December 2021\MK\Source Files;*/
+%let location = L:\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\TTH Lookup Files;
+```
+
+## ########################## R code ############################ ##
+## R code /*Set Up*/
+
+
+## – sets dates used in processing
+
+```{r}
+## Set dates
+
+date1 <- '01Mar2017' # /*Oldest month - doesn't need updating*/
+date2 <- '01Jan2022' # /*Most recent month*/
+date3 <- '01Oct2019' # /*For past 24 months of data*/
+histmonth <- '01Sep2021' # /*For past 4 months of data*/
+
+ndate1 <- as.Date(date1, "%d%B%Y")
+ndate1 <- as.Date(date1, "%d%B%Y")
+ndate3 <- as.Date(date3, "%d%B%Y")
+nhistmonth <- as.Date(histmonth, "%d%B%Y")
+```
+
+# import Data  --------------------------------------
+# set working directory --------------------------------------
+## – sets source location for mapping files
+
+## ########################## SAS code ############################ ##
+/*Import main database*/
+
+
+
+## 2-	Import main database 
+
+
+#### SAS:
+``` {SAS}
+/*============================================================================
+(1) assign libname
+=============================================================================*/
+LIBNAME TTHTTS BASE "\\bbp-dca-sas002\l\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Applicants extract 04Jan2022" ;
+options mprint symbolgen;
+/*============================================================================
+(2) copy dataforsas
+/*=============================================================================*/*/
+/*data work.maindatabase;*/
+/*  	set TTHTTS.allapplfinal_final_mar21v1;*/
+/*run;
+/*NOTE: Table WORK.MAINDATABASE created, with 1390541 rows and 83 columns.*/
+
+PROC SQL;
+   CREATE TABLE WORK.maindatabase AS
+   SELECT
+t1.SubmissionDate,
+t1.ApplicationID,
+t1.VacancyEventID,
+t1.VacancyEventTitleText,
+t1.CandidateID,
+t1.BuildingSite,
+t1.BusinessAreaMerged,
+t1.'Vacancy Status (List)'n,
+t1.'Last Status Change'n,
+t1.MeritListContract,
+t1.MeritListPeriod,
+t1.MeritListContract,
+t1.GeographicalArea,
+t1.ReserveListInitial,
+t1.MeritListInitial,
+t1.TimestampVacancyLive,
+t1.TimestampClosedforApplications,
+t1.CostCentreClean,
+t1.'Cost centre description'n,
+t1.'Group Area'n,
+t1.Division,
+t1.MatchCostCentre,
+t1.BusinessGroupAll,
+t1.AgencyAll,
+t1.DataCleanseFlag,
+t1.HMPPSRoleTypes,
+t1.AllocFinal,
+t1.HMPPSAgency,
+t1.HMPPSPrisonType,
+t1.ProcessFinish,
+t1.PreemploymentChecksComplete,
+t1.ProcessFinishMonth,
+t1.TimetoSignDate,
+t1.TimetoSignMonth,
+t1.PriorityRecruit,
+t1.'Rolling Campaign'n,
+t1.PriorityorRoll,
+t1.FamilVisit,
+t1.ProvisionalOffer,
+t1.FormalOfferMade,
+t1.FormalOfferAccepted,
+t1.ResorMeritList,
+t1.CandidateSubmit,
+t1.SubmissionDateD,
+t1.Sifting,
+t1.SelectedforInterview1D,
+t1.GamificationTestInProgress,
+t1.AssessmentDaySelected,
+t1.AssessmentDayInvited,
+t1.AssessmentDayBooked,
+t1.RollingSifting,
+t1.PlanningInter,
+t1.InterviewinvitedD,
+t1.BookingInter,
+t1.InterviewscheduledD,
+t1.PauseforInter,
+t1.Lastbookedinterviewdate,
+t1.InterProc,
+t1.ProcResults,
+t1.PauseWaitPreEmpCh,
+t1.OnboardingFormD,
+t1.TotalPreEmpCh,
+t1.OnboardFormFilled,
+t1.OnboardingFormSubmittedD,
+t1.PreempCheckStart,
+t1.PreEmploymentChecksinProgD,
+t1.PECsProcess,
+t1.PreempCheckExtend,
+t1.PreEmploymentChecksContinuedD,
+t1.PreempCheckFinish,
+t1.TotalTimetoHire,
+t1.CollatingContract,
+t1.SigningContract,
+t1.ContractProcedure,
+t1.GradeMoJ,
+t1.Grade,
+t1.promotion,
+t1.ApplicationStatusText,
+t1.nonOleeoRecruitmentStage,
+t1.nonOleeoRecruitment,
+t1.HMCTSregions,
+t1.Currentemploymentstatus,
+t1.Region,
+t1.TidyNINumber
+
+       FROM TTHTTS.allapplfinal_final t1;
+QUIT;
+/*NOTE: Table WORK.QUERY_FOR_PREEMP_COMPLETE_MINMAX created, with 77440 rows and 83 columns.*/
+
+PROC SQL;
+   CREATE TABLE WORK.QUERY_FOR_PREEMP_COMPLETE_MINMAX AS
+   SELECT t1.ApplicationID,
+          t1.VacancyEventID,
+          t1.ApplicationStatusText,
+          t1.CostCentreClean,
+          t1.Grade,
+          t1.TimestampVacancyLive,
+          t1.SubmissionDate,
+          t1.TimestampClosedforApplications,
+          t1.PreemploymentChecksComplete,
+          t1.TidyNINumber,
+          t1.HMCTSregions,
+          t1.BusinessAreaMerged,
+          t1.'Group Area'n,
+          t1.Division,
+          t1.MatchCostCentre,
+          t1.AgencyAll,
+          t1.BusinessGroupAll,
+          t1.ProcessFinish,
+          t1.ProcessFinishMonth,
+          t1.TimetoSignDate,
+          t1.TimetoSignMonth,
+          t1.PriorityRecruit,
+          t1.'Rolling Campaign'n,
+          t1.PriorityorRoll,
+          t1.FamilVisit,
+          t1.SubmissionDateD,
+          t1.GamificationTestInProgress,
+          t1.AssessmentDaySelected,
+          t1.AssessmentDayInvited,
+          t1.AssessmentDayBooked,
+          t1.ProvisionalOffer,
+          t1.FormalOfferAccepted,
+          t1.FormalOfferMade,
+          t1.SelectedforInterview1D,
+          t1.InterviewinvitedD,
+          t1.InterviewscheduledD,
+          t1.OnboardingFormSubmittedD,
+          t1.Lastbookedinterviewdate,
+          t1.PreEmploymentChecksinProgD,
+          t1.OnboardingFormD,
+          t1.PreEmploymentChecksContinuedD,
+          t1.CandidateSubmit,
+          t1.Sifting,
+          t1.RollingSifting,
+          t1.PlanningInter,
+          t1.BookingInter,
+          t1.PauseforInter,
+          t1.InterProc,
+          t1.ProcResults,
+          t1.PauseWaitPreEmpCh,
+          t1.TotalPreEmpCh,
+          t1.OnboardFormFilled,
+          t1.PreempCheckStart,
+          t1.PECsProcess,
+          t1.PreempCheckExtend,
+          t1.PreempCheckFinish,
+          t1.TotalTimetoHire,
+          t1.CollatingContract,
+          t1.SigningContract,
+          t1.ContractProcedure,
+          t1.GradeMoJ,
+          t1.promotion,
+          t1.HMPPSAgency,
+          t1.HMPPSPrisonType,
+          t1.HMPPSRoleTypes,
+          t1.AllocFinal,
+          t1.Currentemploymentstatus,
+          t1.nonOleeoRecruitment,
+          t1.nonOleeoRecruitmentStage,
+          t1.Region,
+          t1.DataCleanseFlag,
+          t1.ResorMeritList,
+          t1.BuildingSite,
+          t1.CandidateID,
+          t1.'Cost centre description'n,
+          t1.GeographicalArea,
+          t1.'Last Status Change'n,
+          t1.MeritListContract,
+          t1.MeritListInitial,
+          t1.ReserveListInitial,
+          t1.'Vacancy Status (List)'n,
+          t1.VacancyEventTitleText,
+          t1.MeritListPeriod
+      FROM WORK.MAINDATABASE t1
+      WHERE t1.ProcessFinishMonth BETWEEN &date1. AND &date2. OR t1.TimetoSignMonth BETWEEN &date1. AND
+           &date2.;
+QUIT;
+
+PROC SQL;
+   CREATE TABLE WORK.TTHTTSRemoutscope AS
+   SELECT t1.AgencyAll,
+          t1.AllocFinal,
+          t1.ApplicationID,
+          t1.ApplicationStatusText,
+          t1.BookingInter,
+          t1.BusinessAreaMerged,
+          t1.BusinessGroupAll,
+          t1.CandidateSubmit,
+          t1.CollatingContract,
+          t1.ContractProcedure,
+          t1.CostCentreClean,
+          t1.Division,
+          t1.FamilVisit,
+          t1.FormalOfferAccepted,
+          t1.FormalOfferMade,
+          t1.Grade,
+          t1.GradeMoJ,
+          t1.'Group Area'n,
+          t1.HMCTSregions,
+          t1.HMPPSAgency,
+          t1.HMPPSPrisonType,
+          t1.HMPPSRoleTypes,
+          t1.InterProc,
+          t1.InterviewinvitedD,
+          t1.InterviewscheduledD,
+          t1.MatchCostCentre,
+          t1.OnboardFormFilled,
+          t1.Lastbookedinterviewdate,
+          t1.OnboardingFormD,
+          t1.OnboardingFormSubmittedD,
+          t1.PauseforInter,
+          t1.PauseWaitPreEmpCh,
+          t1.PECsProcess,
+          t1.PlanningInter,
+          t1.PreempCheckExtend,
+          t1.PreempCheckFinish,
+          t1.PreempCheckStart,
+          t1.PreemploymentChecksComplete,
+          t1.PreEmploymentChecksContinuedD,
+          t1.PreEmploymentChecksinProgD,
+          t1.PriorityorRoll,
+          t1.PriorityRecruit,
+          t1.ProcessFinish,
+          t1.ProcessFinishMonth,
+          t1.ProcResults,
+          t1.promotion,
+          t1.ProvisionalOffer,
+          t1.'Rolling Campaign'n,
+          t1.RollingSifting,
+          t1.SelectedforInterview1D,
+          t1.Sifting,
+          t1.SigningContract,
+          t1.SubmissionDate,
+          t1.SubmissionDateD,
+          t1.TidyNINumber,
+          t1.TimestampClosedforApplications,
+          t1.TimestampVacancyLive,
+          t1.TimetoSignDate,
+          t1.TimetoSignMonth,
+          t1.TotalPreEmpCh,
+          t1.TotalTimetoHire,
+          t1.VacancyEventID,
+          t1.Currentemploymentstatus,
+          t1.nonOleeoRecruitment,
+          t1.nonOleeoRecruitmentStage,
+          t1.Region,
+          t1.DataCleanseFlag,
+          t1.ResorMeritList,
+          t1.BuildingSite,
+          t1.CandidateID,
+          t1.'Cost centre description'n,
+          t1.GeographicalArea,
+          t1.'Last Status Change'n,
+          t1.MeritListContract,
+          t1.MeritListInitial,
+          t1.ReserveListInitial,
+          t1.'Vacancy Status (List)'n,
+          t1.VacancyEventTitleText,
+          t1.MeritListPeriod,
+          t1.GamificationTestInProgress,
+          t1.AssessmentDaySelected,
+          t1.AssessmentDayInvited,
+          t1.AssessmentDayBooked
+      FROM WORK.QUERY_FOR_PREEMP_COMPLETE_MINMAX t1
+      WHERE t1.BusinessGroupAll NOT IS MISSING AND t1.VacancyEventID NOT = 10182 AND t1.VacancyEventID NOT = 9701 AND
+           t1.VacancyEventID NOT = 12108 AND t1.VacancyEventID NOT = 14150 AND t1.VacancyEventID NOT = 14904 AND
+           t1.VacancyEventID NOT = 15575 AND t1.VacancyEventID >= . AND t1.VacancyEventID NOT = 16748 AND
+           t1.VacancyEventID NOT = 18041 AND t1.VacancyEventID NOT = 8093 AND t1.VacancyEventID NOT = 12242 AND
+           t1.VacancyEventID NOT = 19651 AND t1.VacancyEventID NOT = 19493 AND t1.VacancyEventID NOT = 23076 AND
+           t1.VacancyEventID NOT = 23657 AND t1.VacancyEventID NOT = 23659 AND t1.VacancyEventID NOT = 15575 AND
+           t1.VacancyEventID NOT = 21751 AND t1.VacancyEventID NOT = 26066 AND t1.VacancyEventID NOT = 22844 AND
+           t1.VacancyEventID NOT = 17837 AND t1.nonOleeoRecruitment NOT = 'No' AND t1.nonOleeoRecruitmentStage = '' AND
+           t1.VacancyEventID NOT = 26563 AND t1.VacancyEventID NOT = 27289 AND t1.VacancyEventID NOT = 27430 AND
+           t1.VacancyEventID NOT = 27406 AND t1.VacancyEventID NOT = 29657 AND t1.ApplicationID NOT = 147747 AND
+           t1.VacancyEventID NOT = 32429 AND t1.ApplicationID NOT = 2125832 AND t1.VacancyEventID NOT = 33261 AND
+           t1.VacancyEventID NOT = 30972 AND t1.VacancyEventID NOT = 33453 AND t1.VacancyEventTitleText NOT =
+           '"Unlocked Graduate Scheme Cohort 5"';
+QUIT;
+
+
+PROC SQL;
+   CREATE TABLE WORK.TTHTTSREMOUTSCOPE2_0000 AS
+   SELECT t1.AgencyAll,
+          t1.AllocFinal,
+          t1.ApplicationID,
+          t1.ApplicationStatusText,
+          t1.BookingInter,
+          t1.BuildingSite,
+          t1.BusinessAreaMerged,
+          t1.BusinessGroupAll,
+          t1.CandidateID,
+          t1.CandidateSubmit,
+          t1.CollatingContract,
+          t1.ContractProcedure,
+          t1.'Cost centre description'n,
+          t1.CostCentreClean,
+          t1.Division,
+          t1.FamilVisit,
+          t1.FormalOfferAccepted,
+          t1.FormalOfferMade,
+          t1.GeographicalArea,
+          t1.Grade,
+          t1.GradeMoJ,
+          t1.'Group Area'n,
+          t1.HMCTSregions,
+          t1.HMPPSAgency,
+          t1.HMPPSPrisonType,
+          t1.HMPPSRoleTypes,
+          t1.InterProc,
+          t1.InterviewinvitedD,
+          t1.InterviewscheduledD,
+          t1.'Last Status Change'n,
+          t1.MatchCostCentre,
+          t1.MeritListContract,
+          t1.MeritListPeriod,
+          t1.OnboardFormFilled,
+          t1.Lastbookedinterviewdate,
+          t1.OnboardingFormD,
+          t1.OnboardingFormSubmittedD,
+          t1.PauseforInter,
+          t1.PauseWaitPreEmpCh,
+          t1.PECsProcess,
+          t1.PlanningInter,
+          t1.PreempCheckExtend,
+          t1.PreempCheckFinish,
+          t1.PreempCheckStart,
+          t1.PreemploymentChecksComplete,
+          t1.PreEmploymentChecksContinuedD,
+          t1.PreEmploymentChecksinProgD,
+          t1.PriorityorRoll,
+          t1.PriorityRecruit,
+          t1.ProcessFinish,
+          t1.ProcessFinishMonth,
+          t1.ProcResults,
+          t1.promotion,
+          t1.ProvisionalOffer,
+          t1.'Rolling Campaign'n,
+          t1.RollingSifting,
+          t1.SelectedforInterview1D,
+          t1.Sifting,
+          t1.SigningContract,
+          t1.SubmissionDate,
+          t1.SubmissionDateD,
+          t1.TidyNINumber,
+          t1.TimestampClosedforApplications,
+          t1.TimestampVacancyLive,
+          t1.TimetoSignDate,
+          t1.TimetoSignMonth,
+          t1.TotalPreEmpCh,
+          t1.TotalTimetoHire,
+          t1.'Vacancy Status (List)'n,
+          t1.VacancyEventID,
+          t1.Currentemploymentstatus,
+          t1.VacancyEventTitleText,
+          t1.nonOleeoRecruitment,
+          t1.nonOleeoRecruitmentStage,
+          t1.Region,
+          t1.DataCleanseFlag,
+          t1.ResorMeritList,
+          t1.MeritListInitial,
+          t1.ReserveListInitial
+      FROM WORK.TTHTTSREMOUTSCOPE t1
+      WHERE t1.DataCleanseFlag = 'Yes';
+QUIT;
+
+PROC SQL;
+   CREATE TABLE WORK.TTHTTSREMOUTSCOPE2 AS
+   SELECT t1.AgencyAll,
+          t1.AllocFinal,
+          t1.ApplicationID,
+          t1.ApplicationStatusText,
+          t1.BookingInter,
+          t1.BusinessAreaMerged,
+          t1.BusinessGroupAll,
+          t1.CandidateSubmit,
+          t1.CollatingContract,
+          t1.ContractProcedure,
+          t1.CostCentreClean,
+          t1.Division,
+          t1.FamilVisit,
+          t1.FormalOfferAccepted,
+          t1.FormalOfferMade,
+          t1.Grade,
+          t1.GradeMoJ,
+          t1.'Group Area'n,
+          t1.HMCTSregions,
+          t1.HMPPSAgency,
+          t1.HMPPSPrisonType,
+          t1.HMPPSRoleTypes,
+          t1.InterProc,
+          t1.InterviewinvitedD,
+          t1.InterviewscheduledD,
+          t1.MatchCostCentre,
+          t1.OnboardFormFilled,
+          t1.Lastbookedinterviewdate,
+          t1.OnboardingFormD,
+          t1.OnboardingFormSubmittedD,
+          t1.PauseforInter,
+          t1.PauseWaitPreEmpCh,
+          t1.PECsProcess,
+          t1.PlanningInter,
+          t1.PreempCheckExtend,
+          t1.PreempCheckFinish,
+          t1.PreempCheckStart,
+          t1.PreemploymentChecksComplete,
+          t1.PreEmploymentChecksContinuedD,
+          t1.PreEmploymentChecksinProgD,
+          t1.PriorityorRoll,
+          t1.PriorityRecruit,
+          t1.ProcessFinish,
+          t1.ProcessFinishMonth,
+          t1.ProcResults,
+          t1.promotion,
+          t1.ProvisionalOffer,
+          t1.'Rolling Campaign'n,
+          t1.RollingSifting,
+          t1.SelectedforInterview1D,
+          t1.Sifting,
+          t1.SigningContract,
+          t1.SubmissionDate,
+          t1.SubmissionDateD,
+          t1.TidyNINumber,
+          t1.TimestampClosedforApplications,
+          t1.TimestampVacancyLive,
+          t1.TimetoSignDate,
+          t1.TimetoSignMonth,
+          t1.TotalPreEmpCh,
+          t1.TotalTimetoHire,
+          t1.VacancyEventID,
+          t1.Currentemploymentstatus,
+          t1.nonOleeoRecruitment,
+          t1.nonOleeoRecruitmentStage,
+          t1.Region,
+          t1.DataCleanseFlag,
+          t1.ResorMeritList,
+          t1.BuildingSite,
+          t1.CandidateID,
+          t1.'Cost centre description'n,
+          t1.GeographicalArea,
+          t1.'Last Status Change'n,
+          t1.MeritListContract,
+          t1.MeritListInitial,
+          t1.ReserveListInitial,
+          t1.'Vacancy Status (List)'n,
+          t1.VacancyEventTitleText,
+          t1.MeritListPeriod,
+          t1.GamificationTestInProgress,
+          t1.AssessmentDaySelected,
+          t1.AssessmentDayInvited,
+          t1.AssessmentDayBooked
+      FROM WORK.TTHTTSREMOUTSCOPE t1
+      WHERE t1.DataCleanseFlag NOT = 'Yes';
+QUIT;
+```
+#### end SAS
+
+## ########################## R code ############################ ##
+## R code /*Import main database*/
+
+# Import Data  --------------------------------------
+
+```{sql connection=}
+CREATE EXTERNAL TABLE IF NOT EXISTS `tth`.`maindatabase` (
+`SubmissionDate` string,
+`ApplicationID` string,
+`VacancyEventID` string,
+`VacancyEventTitleText` string,
+`CandidateID` string,
+`BuildingSite` string,
+`BusinessAreaMerged` string,
+`Vacancy.Status..List.` string,
+`Last.Status.Change` string,
+`MeritListContract` string,
+`MeritListPeriod` string,
+`GeographicalArea` string,
+`ReserveListInitial` string,
+`MeritListInitial` string,
+`TimestampVacancyLive` string,
+`TimestampClosedforApplications` string,
+`CostCentreClean` string,
+`Cost.centre.description` string,
+`Group.Area` string,
+`Division` string,
+`MatchCostCentre` string,
+`BusinessGroupAll` string,
+`AgencyAll` string,
+`DataCleanseFlag` string,
+`HMPPSRoleTypes` string,
+`AllocFinal` string,
+`HMPPSAgency` string,
+`HMPPSPrisonType` string,
+`ProcessFinish` string,
+`PreemploymentChecksComplete` string,
+`ProcessFinishMonth` string,
+`TimetoSignDate` string,
+`TimetoSignMonth` string,
+`PriorityRecruit` string,
+`Rolling.Campaign` string,
+`PriorityorRoll` string,
+`FamilVisit` string,
+`ProvisionalOffer` string,
+`FormalOfferMade` string,
+`FormalOfferAccepted` string,
+`ResorMeritList` string,
+`CandidateSubmit` string,
+`SubmissionDateD` string,
+`Sifting` string,
+`SelectedforInterview1D` string,
+`GamificationTestInProgress` string,
+`AssessmentDaySelected` string,
+`AssessmentDayInvited` string,
+`AssessmentDayBooked` string,
+`RollingSifting` string,
+`PlanningInter` string,
+`InterviewinvitedD` string,
+`BookingInter` string,
+`InterviewscheduledD` string,
+`PauseforInter` string,
+`Lastbookedinterviewdate` string,
+`InterProc` string,
+`ProcResults` string,
+`PauseWaitPreEmpCh` string,
+`OnboardingFormD` string,
+`TotalPreEmpCh` string,
+`OnboardFormFilled` string,
+`OnboardingFormSubmittedD` string,
+`PreempCheckStart` string,
+`PreEmploymentChecksinProgD` string,
+`PECsProcess` string,
+`PreempCheckExtend` string,
+`PreEmploymentChecksContinuedD` string,
+`PreempCheckFinish` string,
+`TotalTimetoHire` string,
+`CollatingContract` string,
+`SigningContract` string,
+`ContractProcedure` string,
+`GradeMoJ` string,
+`Grade` string,
+`promotion` string,
+`ApplicationStatusText` string,
+`nonOleeoRecruitmentStage` string,
+`nonOleeoRecruitment` string,
+`HMCTSregions` string,
+`Currentemploymentstatus` string,
+`Region` string,
+`TidyNINumber` string
+
+)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
+WITH SERDEPROPERTIES (
+  'serialization.format' = ',',
+  'field.delim' = ','
+) LOCATION 's3://alpha-hr-arm-main/data/oleeo_data/processed_data/recruitment_main_data/Jan-22/maindatabase/'
+TBLPROPERTIES ('has_encrypted_data'='false');
+
+```
+
+## install and load the required R packages for
+
+Rdbtools 
+
+## Read data in Athena Table:
+```{r}
+# Import Data  --------------------------------------
+
+library(Rdbtools)
+
+query_Athena_table <- function(tbl){
+  query <- stringr::str_glue("SELECT * from tth.{tbl}")
+  con <- connect_athena() # creates a connection with sensible defaults
+  df <- dbGetQuery(con, query) # queries and puts data in R environment
+  DBI::dbDisconnect(con) # disconnects the connection
+  return(df)
+}
+
+query_tbl <- function(tbl){
+  query <- stringr::str_glue("SELECT *
+                              from tth.{tbl}
+                              limit 1000") # limiting rows to get sample of data
+  con <- Rdbtools::connect_athena() # creates a connection with sensible defaults
+  df <- Rdbtools::dbGetQuery(con, query) # queries and puts data in R environment
+  DBI::dbDisconnect(con) # disconnects the connection
+  return(df)
+}
+
+query_table_dates <- function(tbl, dt1, dt2){
+  query <- stringr::str_glue("SELECT * from tth.{tbl} where year between {dt1} and {dt2}")
+  con <- Rdbtools::connect_athena() # creates a connection with sensible defaults
+  df <- Rdbtools::dbGetQuery(con, query) # queries and puts data in R environment
+  DBI::dbDisconnect(con) # disconnects the connection
+  return(df)
+}
+
+
+
+```
+
+```{r}
+maindatabase <- query_Athena_table('maindatabase')
+
+maindatabase10000 <- query_tbl('maindatabase')
+
+download_file_from_s3("alpha-hr-arm-main/data/oleeo_data/processed_data/recruitment_main_data/Jan-22/maindatabase.csv",
+                      "rawData/maindatabase.csv",
+                      overwrite = TRUE)
+
+## ################# create RDA object #################### ##
+## corresponding s3 path to the data file
+s3_directory <- "data/oleeo_data/processed_data/recruitment_main_data/Jan-22"
+data_file <- "maindatabase.csv"
+## Concatenate vectors after converting to character.
+s3_path <- paste0("s3://", s3_directory, "/", data_file)
+#
+FUN <- data.table::fread
+dataset_type <- 1  # tibble: 1 (default)
+
+## devtools::load_all(".")
+gc()
+
+maindatabase <- create_data_object(FUN, s3_path, dataset_type)
+#rm(list = c("maindatabase"))
+## if csv file was saved locally
+#csv_file<-read.csv(path, stringsAsFactors = FALSE)
+```
+
+## some code to go from raw data csv to a nice RDA object
+## create_maindatabase_RDAobject.R ---------------------------------------------
+```{r}
+## ################# save RDA object #################### ##
+##
+## some code to go from raw data csv to a nice RDA object
+# create_maindatabase_RDAobject.R
+maindatabase <- read.csv("./rawData/maindatabase.csv", check.names = TRUE)
+usethis::use_data(maindatabase)
+rm(maindatabase)
+```
+
+
+```{r}
+
+require(lubridate)
+library(lubridate)
+library(stringr)
+library(dplyr)
+
+PREEMP_COMPLETE_MINMAX1 <- maindatabase %>% 
+      dplyr::filter(between(lubridate::as_date(substr(maindatabase_df$processfinishmonth, start = 2, stop = 8)), lubridate::mdy(date1), lubridate::mdy(date2))
+   | between(lubridate::as_date(substr(maindatabase_df$timetosigndate, start = 2, stop = 8)), lubridate::mdy(date1), lubridate::mdy(date1)))
+# QUERY_FOR_PREEMP_COMPLETE_MINMAX <- query_Athena_table('QUERY_FOR_PREEMP_COMPLETE_MINMAX')
+
+# QUERY_FOR_PREEMP_COMPLETE_MINMAX100 <- query_tbl('QUERY_FOR_PREEMP_COMPLETE_MINMAX')
+```
+
+## Generating TTHTTSRemoutscope based on PREEMP_COMPLETE_MINMAX
+## Athena Table:
+```{r}
+# query_table_dates <- function(tbl, dt1, dt2){
+#   query <- stringr::str_glue("SELECT * from tth.{tbl} where year between {dt1} and {dt2} limit 10")
+#   con <- connect_athena() # creates a connection with sensible defaults
+#   df <- dbGetQuery(con, query) # queries and puts data in R environment
+#   DBI::dbDisconnect(con) # disconnects the connection
+#   return(df)
+# }  
+
+# maindatabase$processfinishmonth <- as.Date(maindatabase$processfinishmonth, "%d%b%Y")
+
+# df <- data.frame(maindatabase)
+# 
+# df1 <- tibble(PREEMP_COMPLETE_MINMAX) 
+# 
+# df1 
+# QUERY_FOR_PREEMP_COMPLETE_MINMAX <- df1[!(is.na(df1$businessgroupall) | df1$businessgroupall==""),]
+
+#qq <- select(PREEMP_COMPLETE_MINMAX) %>%
+# qq <- dplyr::filter(PREEMP_COMPLETE_MINMAX,!(is.na(PREEMP_COMPLETE_MINMAX$businessgroupall) | PREEMP_COMPLETE_MINMAX$businessgroupall==''))
+# 
+vacancyeventid_list <- as.factor(c(10182, 9701, 12108, 14150, 14904, 15575, 16748, 18041, 8093, 12242, 19651, 19493, 23076, 23657, 23659, 15575, 21751, 26066, 22844, 17837, 26563, 27289, 27430, 27406, 29657, 32429, 33261, 32429, 30972, 33453))
+
+## >= .
+applicationid_list <- as.factor(c(147747, 2125832))
+
+TTHTTSRemoutscope <- PREEMP_COMPLETE_MINMAX %>% 
+   select(c(
+         tolower("AgencyAll"),  ## doesn't exist
+         tolower("AllocFinal"), ## doesn't exist
+         tolower("applicationid"),
+         tolower("ApplicationStatusText"),
+         tolower("BookingInter"),
+         tolower("BusinessAreaMerged"),
+         tolower("BusinessGroupAll"),
+         tolower("CandidateSubmit"),
+         tolower("CollatingContract"),
+         tolower("ContractProcedure"),
+         tolower("CostCentreClean"),
+         tolower("Division"),
+         tolower("FamilVisit"),
+         tolower("FormalOfferAccepted"),
+         tolower("FormalOfferMade"),
+         tolower("Grade"),
+         tolower("GradeMoJ"),
+         tolower("Group.Area"),
+         tolower("HMCTSregions"),
+         tolower("HMPPSAgency"),
+         tolower("HMPPSPrisonType"),
+         tolower("HMPPSRoleTypes"),
+         tolower("InterProc"),
+         tolower("InterviewinvitedD"),
+         tolower("InterviewscheduledD"),
+         tolower("MatchCostCentre"),
+         tolower("OnboardFormFilled"),
+         tolower("Lastbookedinterviewdate"),
+         tolower("OnboardingFormD"),
+         tolower("OnboardingFormSubmittedD"),
+         tolower("PauseforInter"),
+         tolower("PauseWaitPreEmpCh"),
+         tolower("PECsProcess"),
+         tolower("PlanningInter"),
+         tolower("PreempCheckExtend"),
+         tolower("PreempCheckFinish"),
+         tolower("PreempCheckStart"),
+         tolower("PreemploymentChecksComplete"),
+         tolower("PreEmploymentChecksContinuedD"),
+         tolower("PreEmploymentChecksinProgD"),
+         tolower("PriorityorRoll"),
+         tolower("PriorityRecruit"),
+         tolower("ProcessFinish"),
+         tolower("ProcessFinishMonth"),
+         tolower("ProcResults"),
+         tolower("promotion"),
+         tolower("ProvisionalOffer"),
+         tolower("Rolling.Campaign"),
+         tolower("RollingSifting"),
+         tolower("SelectedforInterview1D"),
+         tolower("Sifting"),
+         tolower("SigningContract"),
+         tolower("SubmissionDate"),
+         tolower("SubmissionDateD"),
+         tolower("TidyNINumber"),
+         tolower("TimestampClosedforApplications"),
+         tolower("TimestampVacancyLive"),
+         tolower("TimetoSignDate"),
+         tolower("TimetoSignMonth"),
+         tolower("TotalPreEmpCh"),
+         tolower("TotalTimetoHire"),
+         tolower("VacancyEventID"),
+         tolower("Currentemploymentstatus"),
+         tolower("nonOleeoRecruitment"),
+         tolower("nonOleeoRecruitmentStage"),
+         tolower("Region"),
+         tolower("DataCleanseFlag"),
+         tolower("ResorMeritList"),
+         tolower("BuildingSite"),
+         tolower("CandidateID"),
+         tolower("Cost.centre.description"),# in SAS: "Cost centre description'n"
+         tolower("GeographicalArea"),
+         tolower("Last.Status.Change"),# in SAS: "Last Status Change'n"
+         tolower("MeritListContract"),
+         tolower("MeritListInitial"),
+         tolower("ReserveListInitial"),
+         tolower("Vacancy.Status..List."),# in SAS: "Vacancy Status (List)'n"
+         tolower("VacancyEventTitleText"),
+         tolower("MeritListPeriod"),
+         tolower("GamificationTestInProgress"),
+         tolower("AssessmentDaySelected"),
+         tolower("AssessmentDayInvited"),
+         tolower("AssessmentDayBooked")
+         )) %>% 
+   filter(!((is.na(PREEMP_COMPLETE_MINMAX$businessgroupall) |
+               PREEMP_COMPLETE_MINMAX$businessgroupall =='') &
+               (PREEMP_COMPLETE_MINMAX$vacancyeventid <= 0) &
+               (PREEMP_COMPLETE_MINMAX$applicationid %in% applicationid_list) &
+               (PREEMP_COMPLETE_MINMAX$nonoleeorecruitmentstage =='') &
+               (PREEMP_COMPLETE_MINMAX$nonoleeorecruitment ==  'No') &
+               (PREEMP_COMPLETE_MINMAX$vacancyeventtitletext ==  "Unlocked Graduate Scheme Cohort 5")))
+
+   
+# #query_table_months <- function(database_name, table_name, column_name, date1, date2){
+#   query <- stringr::str_glue("SELECT * from tth.QUERY_FOR_PREEMP_COMPLETE_MINMAX100
+#                               where processfinishmonth between 01Mar2017 and 01Jan2022 limit 100")
+#   con <- connect_athena() # creates a connection with sensible defaults
+#   df <- dbGetQuery(con, query) # queries and puts data in R environment
+#   DBI::dbDisconnect(con) # disconnects the connection
+#   df
+# #  return(df)
+# #}
+
+```
+
+```{r}
+TTHTTSREMOUTSCOPE2 <- TTHTTSRemoutscope %>% 
+   filter(!(TTHTTSRemoutscope$datacleanseflag == 'YES'))
+```
+
+## ########################## SAS code ############################ ##
+/*Adding Labels*/
+
+```{sas}
+data WORK.TTHTTSRECRUITSTAGES3;
+set WORK.TTHTTSRemoutscope2;
+format BGexpand $char32.;
+if BusinessGroupAll ='HMPPS' AND PriorityRecruit = 'Yes' AND 'Rolling Campaignn= 'Yes' then
+	BGexpand = 'HMPPS Priority Rolling';
+/*	BGexpand = 'HMPPS Roll';*/
+else if BusinessGroupAll ='HMPPS' AND PriorityRecruit = 'Yes' AND 'Rolling Campaignn = 'No' then
+	BGexpand = 'HMPPS Priority non-Rolling';
+/*	BGexpand = 'HMPPS NRoll';*/
+else if BusinessGroupAll ='HMPPS' AND PriorityRecruit = 'No' AND 'Rolling Campaignn= 'Yes' then
+	BGexpand = 'HMPPS non-Priority Rolling';
+/*	BGexpand = 'HMPPS Roll';*/
+else if BusinessGroupAll ='HMPPS' AND PriorityorRoll = 'No' then
+	BGexpand = 'HMPPS non-Priority non-Roll';
+/*	BGexpand = 'HMPPS NRoll';*/
+else
+	BGexpand = BusinessGroupAll;
+/* TTH Business Groups */
+format BG_TTH $char32.;
+                   
+if BusinessGroupAll = 'CFOG' or BusinessGroupAll = 'CICA' or BusinessGroupAll = 'JAOPG'
+	or BusinessGroupAll = 'JPSCG' or BusinessGroupAll = 'Legal Aid Agency'
+	or BusinessGroupAll = 'PCAG' or BusinessGroupAll = 'CPOG' or BusinessGroupAll = 'PSG'
+	or BusinessGroupAll = 'Office of the Public Guardian' or BusinessGroupAll = 'People Group' then
+	BG_TTH = 'MoJ HQ, LAA, OPG & CICA';
+else if BusinessGroupAll = 'HMCTS' then
+	BG_TTH = 'HMCTS';
+else if BusinessGroupAll = 'HMPPS' then
+	BG_TTH = 'HMPPS';
+run;
+proc datasets nodetails nolist;
+   delete TTHTTSREMOUTSCOPE TTHTTSREMOUTSCOPE2;
+run;
+```
+
+```{sas}
+/*Proc freq data=WORK.HMPPSROLLINGLIST;*/
+/**/
+/*Table ProcessFinishMonth/Out=Numofcasesroll (drop=percent);*/
+/**/
+/*run;*/
+/**/
+/*Proc freq data=WORK.FILTER_FOR_TTHTTSRECRUITSTAGES;*/
+/**/
+/*Table BG_TTH * ProcessFinishMonth/Out=Numofcasesall (drop=percent);*/
+/**/
+/*run;*/
+/*NOTE: Table WORK.FILTER_FOR_TTHTTSRECRUITSTAGES created, with 70634 rows and 81 columns.*/
+/*Time to Hire BNA*/
+PROC SQL;
+   CREATE TABLE WORK.FILTER_FOR_TTHTTSRECRUITSTAGES AS 
+   SELECT t1.ApplicationID, 
+          t1.CandidateID, 
+          t1.ApplicationStatusText, 
+          t1.TidyNINumber, 
+          t1.VacancyEventID, 
+          t1.VacancyEventTitleText, 
+          t1.'Vacancy Status (List)'n, 
+          t1.'Last Status Change'n, 
+          t1.AgencyAll, 
+          t1.BusinessGroupAll, 
+          t1.BG_TTH, 
+          t1.BGexpand, 
+          t1.BusinessAreaMerged, 
+          t1.'Group Area'n, 
+          t1.Division, 
+          t1.GradeMoJ, 
+          t1.promotion, 
+          t1.'Rolling Campaign'n, 
+          t1.PriorityRecruit, 
+          t1.PriorityorRoll, 
+          t1.FamilVisit, 
+          t1.Region, 
+          t1.GeographicalArea, 
+          t1.MatchCostCentre, 
+          t1.CostCentreClean, 
+          t1.'Cost centre description'n, 
+          t1.HMCTSregions, 
+          t1.HMPPSAgency, 
+          t1.HMPPSPrisonType, 
+          t1.HMPPSRoleTypes, 
+          t1.BuildingSite, 
+          t1.AllocFinal, 
+          t1.Currentemploymentstatus, 
+          t1.Grade, 
+          t1.ProcessFinishMonth, 
+          t1.TimetoSignMonth, 
+          t1.TimestampVacancyLive, 
+          t1.SubmissionDateD, 
+          t1.GamificationTestInProgress, 
+          t1.AssessmentDaySelected, 
+          t1.AssessmentDayInvited, 
+          t1.AssessmentDayBooked, 
+          t1.TimestampClosedforApplications, 
+          t1.SelectedforInterview1D, 
+          t1.InterviewinvitedD, 
+          t1.InterviewscheduledD, 
+          t1.Lastbookedinterviewdate, 
+          t1.ProvisionalOffer, 
+          t1.OnboardingFormD, 
+          t1.OnboardingFormSubmittedD, 
+          t1.PreEmploymentChecksinProgD, 
+          t1.PreemploymentChecksComplete, 
+          t1.PreEmploymentChecksContinuedD, 
+          t1.FormalOfferMade, 
+          t1.FormalOfferAccepted, 
+          t1.ProcessFinish, 
+          t1.TimetoSignDate, 
+          t1.ResorMeritList, 
+          t1.MeritListInitial, 
+          t1.ReserveListInitial, 
+          t1.CandidateSubmit, 
+          t1.Sifting, 
+          t1.RollingSifting, 
+          t1.PlanningInter, 
+          t1.BookingInter, 
+          t1.PauseforInter, 
+          t1.InterProc, 
+          t1.ProcResults, 
+          t1.PauseWaitPreEmpCh, 
+          t1.TotalPreEmpCh, 
+          t1.OnboardFormFilled, 
+          t1.PreempCheckStart, 
+          t1.PECsProcess, 
+          t1.PreempCheckExtend, 
+          t1.PreempCheckFinish, 
+          t1.TotalTimetoHire, 
+          t1.CollatingContract, 
+          t1.SigningContract, 
+          t1.ContractProcedure, 
+          t1.MeritListPeriod, 
+          t1.MeritListContract
+      FROM WORK.TTHTTSRECRUITSTAGES3 t1
+      WHERE t1.ProcessFinishMonth BETWEEN &date1. AND &date2. AND t1.TotalTimetoHire NOT IS MISSING AND 
+           t1.BG_TTH NOT IS MISSING AND t1.TotalTimetoHire >= 0;
+QUIT;
+proc sort data = WORK.FILTER_FOR_TTHTTSRECRUITSTAGES;
+	by BG_TTH ProcessFinishMonth 'Rolling Campaign'n; *which variable should we sort by?;
+run;
+```
+
+##
+## ########################## R code ############################ ##
+## R code /*Adding Labels*/
+```{r}
+#3. Identify most recent PQiP campaigns and add flags/fix the business groups (often pull through as unknown from our matching)
+#
+BusinessGroup_list <- as.factor(c('CFOG','CICA', 'JAOPG', 'JPSCG', 'Legal Aid Agency', 'PCAG', 'CPOG', 'PSG', 'Office of the Public Guardian', 'People Group'))
+
+TTHTTSRECRUITSTAGES3 <- TTHTTSREMOUTSCOPE2 %>% 
+   mutate(bg_extend = 
+          case_when(
+                   (TTHTTSREMOUTSCOPE2$businessgroupall == "HMPPS" &
+                   TTHTTSREMOUTSCOPE2$priorityrecruit == "Yes" &
+                   TTHTTSREMOUTSCOPE2$rolling.campaign == "Yes") 
+                   ~ "HMPPS Priority Rolling",
+               if  (TTHTTSREMOUTSCOPE2$businessgroupall == "HMPPS" &
+                   TTHTTSREMOUTSCOPE2$priorityrecruit == "Yes" &
+                   TTHTTSREMOUTSCOPE2$rolling.campaign == "No") 
+                  ~ "HMPPS Priority non-Rolling",
+               if  (TTHTTSREMOUTSCOPE2$businessgroupall == "HMPPS" &
+                   TTHTTSREMOUTSCOPE2$priorityrecruit == "No" &
+                   TTHTTSREMOUTSCOPE2$rolling.campaign == "yes") 
+                  ~ "HMPPS non-Priority Rolling",
+               if  (TTHTTSREMOUTSCOPE2$businessgroupall == "HMPPS" &
+                   TTHTTSREMOUTSCOPE2$priorityorroll == "No") 
+                  ~ "HMPPS non-Priority non-Roll",
+                    TRUE                           
+                  ~ TTHTTSREMOUTSCOPE2$businessgroupall)
+                 ) %>% 
+## TTH Business Groups ------------------------------------------------------
+## 
+   mutate(bg_tth = 
+             case_when(
+                   (TTHTTSREMOUTSCOPE2$businessgroupall %in% BusinessGroup_list)
+                   ~ "MoJ HQ, LAA, OPG & CICA",	
+                   (TTHTTSREMOUTSCOPE2$businessgroupall %in% BusinessGroup_list)
+                   ~ "MoJ HQ, LAA, OPG & CICA",			
+                   (TTHTTSREMOUTSCOPE2$businessgroupall == "HMCTS")
+                   ~ "HMCTS",	
+                   (TTHTTSREMOUTSCOPE2$businessgroupall == "HMPPS")
+                   ~ "HMPPS",
+                    TRUE                           
+                  ~ as.character(TTHTTSREMOUTSCOPE2$businessgroupall))
+                 )
+# proc datasets nodetails nolist;
+#    delete TTHTTSREMOUTSCOPE TTHTTSREMOUTSCOPE2;
+# run;
+ # %>% dplyr::filter(TotalTimetoHire > 730)) != 0) 
+
+# applvac_hmpps_groups[, `:=` (BusinessAreaMerged  = dplyr::if_else((VacancyEventID %in% pqip_campaigns), "HMPPS - National Probation Service", BusinessAreaMerged)
+```
+
+## ########################## SAS code ############################ ##
+/*Adding Labels*/
+
+
+## 4-	Grouping & Producing summary stats
+# -  The remaining steps are just providing breakdowns for
+#    different parts of MoJ
+```{r}
+
+```
+##
+## ################################################################ ##
+## ########################## TTH summary 
+
+## ########################## SAS code ############################ ##
+/*Producing summary stats*/
+## ########################## Summary ############################ ##
+
+## 4. TTS Summary table main roll-nonroll
+
+Time to sign
+
+```{sas}
+# proc sort data = WORK.FILTER_FOR_TTHTTSRECRUITSTAGES;
+# 	by BG_TTH ProcessFinishMonth 'Rolling Campaign'n; *which variable should we sort by?;
+# run;
+#
+# /* rolling/non-rolling campaigns BGs */
+#
+# %let st1 = CandidateSubmit;
+# %let st2 = Sifting;
+# %let st3 = PlanningInter;
+# %let st4 = BookingInter;
+# %let st5 = PauseforInter;
+# %let st6 = InterProc;
+# %let st7 = ProcResults;
+# %let st8 = PauseWaitPreEmpCh;
+# %let st9 = TotalPreEmpCh;
+# %let st10 = TotalTimetoHire;
+# %let st11 = OnboardFormFilled;
+# %let st12 = PreempCheckStart;
+# %let st13 = PECsProcess;
+# %let st14= PreempCheckExtend;
+# %let st15 = PreempCheckFinish;
+# %let st16 = RollingSifting;
+#
+
+#
+# %put &st16;
+#
+# %macro printAll();
+#
+# 	%DO i=1 %to 16;
+# 	%PUT "&&st&i";
+#
+# Proc Means N data=WORK.FILTER_FOR_TTHTTSRECRUITSTAGES noprint;
+#  var &&st&i;
+#  by BG_TTH ProcessFinishMonth 'Rolling Campaign'n;
+#  output out=work.freq&&st&i(drop= _type_ _freq_)  n=N_&&st&i mean=Mean_&&st&i min = Min_&&st&i max=Max_&&st&i median=Median_&&st&i;
+# run;
+#
+# %end;
+#
+#
+# %mend printAll;
+#
+# %printAll();
+```
+
+```{r}
+
+##
+
+## ########################## TTH summary ############################ ##
+##
+library(dplyr)
+
+FILTER_FOR_TTHTTSRECRUITSTAGES <- TTHTTSRECRUITSTAGES3 %>%
+  select(c(tolower("ApplicationID"),
+           tolower("CandidateID"),
+           tolower("ApplicationStatusText"),
+           tolower("TidyNINumber"),
+           tolower("VacancyEventID"),
+           tolower("VacancyEventTitleText"),
+           tolower("Vacancy.Status..List."),
+           tolower("Last.Status.Change"),
+           tolower("AgencyAll"),
+           tolower("BusinessGroupAll"),
+           tolower("bg_tth"),
+           tolower("bg_extend"),
+           tolower("BusinessAreaMerged"),
+           tolower("Group.Area"),
+           tolower("Division"),
+           tolower("GradeMoJ"),
+           tolower("promotion"),
+           tolower("Rolling.Campaign"),
+           tolower("PriorityRecruit"),
+           tolower("PriorityorRoll"),
+           tolower("FamilVisit"),
+           tolower("Region"),
+           tolower("GeographicalArea"),
+           tolower("MatchCostCentre"),
+           tolower("CostCentreClean"),
+           tolower("Cost.centre.description"),
+           tolower("HMCTSregions"),
+           tolower("HMPPSAgency"),
+           tolower("HMPPSPrisonType"),
+           tolower("HMPPSRoleTypes"),
+           tolower("BuildingSite"),
+           tolower("AllocFinal"),
+           tolower("Currentemploymentstatus"),
+           tolower("Grade"),
+           tolower("ProcessFinishMonth"),
+           tolower("TimetoSignMonth"),
+           tolower("TimestampVacancyLive"),
+           tolower("SubmissionDateD"),
+           tolower("GamificationTestInProgress"),
+           tolower("AssessmentDaySelected"),
+           tolower("AssessmentDayInvited"),
+           tolower("AssessmentDayBooked"),
+           tolower("TimestampClosedforApplications"),
+           tolower("SelectedforInterview1D"),
+           tolower("InterviewinvitedD"),
+           tolower("InterviewscheduledD"),
+           tolower("Lastbookedinterviewdate"),
+           tolower("ProvisionalOffer"),
+           tolower("OnboardingFormD"),
+           tolower("OnboardingFormSubmittedD"),
+           tolower("PreEmploymentChecksinProgD"),
+           tolower("PreemploymentChecksComplete"),
+           tolower("PreEmploymentChecksContinuedD"),
+           tolower("FormalOfferMade"),
+           tolower("FormalOfferAccepted"),
+           tolower("ProcessFinish"),
+           tolower("TimetoSignDate"),
+           tolower("ResorMeritList"),
+           tolower("MeritListInitial"),
+           tolower("ReserveListInitial"),
+           tolower("CandidateSubmit"),
+           tolower("Sifting"),
+           tolower("RollingSifting"),
+           tolower("PlanningInter"),
+           tolower("BookingInter"),
+           tolower("PauseforInter"),
+           tolower("InterProc"),
+           tolower("ProcResults"),
+           tolower("PauseWaitPreEmpCh"),
+           tolower("TotalPreEmpCh"),
+           tolower("OnboardFormFilled"),
+           tolower("PreempCheckStart"),
+           tolower("PECsProcess"),
+           tolower("PreempCheckExtend"),
+           tolower("PreempCheckFinish"),
+           tolower("TotalTimetoHire"),
+           tolower("CollatingContract"),
+           tolower("SigningContract"),
+           tolower("ContractProcedure"),
+           tolower("MeritListPeriod"),
+           tolower("MeritListContract")
+  )) %>%
+  filter(!(is.na(TTHTTSRECRUITSTAGES3$totaltimetohire)) |
+         !(is.na(TTHTTSRECRUITSTAGES3$bg_tth)) |
+         !(TTHTTSRECRUITSTAGES3$totaltimetohire < 0)
+         )
+
+## ########################################################################
+FILTER_FOR_TTHTTSRECRUITSTAGES <- dplyr::arrange(
+  FILTER_FOR_TTHTTSRECRUITSTAGES, bg_tth,
+  processfinishmonth, rolling.campaign)
+## ########################################################################
+##
+#
+## ################# save data object #################### ##
+# save enviroment data
+save(FILTER_FOR_TTHTTSRECRUITSTAGES, file = ".RData")
+# save data as data frame
+FILTER_FOR_TTHTTSRECRUITSTAGES_df <- data.frame(FILTER_FOR_TTHTTSRECRUITSTAGES)
+# takes an R object, a write function with file as a parameter specifying the path to the data, and a full S3 path as parameters.
+botor::s3_write(FILTER_FOR_TTHTTSRECRUITSTAGES_df, readr::write_csv,
+                "s3://alpha-hr-arm-main/data/oleeo_data/processed_data/recruitment_main_data/Jan-22/FILTER_FOR_TTHTTSRECRUITSTAGES.csv")
+
+## download processed data from s3 bucket
+download_file_from_s3("alpha-hr-arm-main/data/oleeo_data/processed_data/recruitment_main_data/Jan-22/FILTER_FOR_TTHTTSRECRUITSTAGES.csv",
+                      "rawData/FILTER_FOR_TTHTTSRECRUITSTAGES.csv",
+                      overwrite = TRUE)
+
+# ## ################# create RDA object #################### ##
+# ## corresponding s3 path to the data file
+# s3_directory <- "data/oleeo_data/processed_data/recruitment_main_data/Jan-22"
+# data_file <- "FILTER_FOR_TTHTTSRECRUITSTAGES.csv"
+# ## Concatenate vectors after converting to character.
+# s3_path <- paste0("s3://", s3_directory, "/", data_file)
+# #
+# FUN <- data.table::fread
+# dataset_type <- 1  # tibble: 1 (default)
+#
+# ## devtools::load_all(".")
+# gc()
+#
+# FILTER_FOR_TTHTTSRECRUITSTAGES <- create_data_object(FUN, s3_path, dataset_type)
+# #rm(list = c("FILTER_FOR_TTHTTSRECRUITSTAGES"))
+# ## if csv file was saved locally
+# #csv_file<-read.csv(path, stringsAsFactors = FALSE)
+##
+## ################# save RDA object #################### ##
+##
+## some code to go from raw data csv to a nice RDA object
+# create_regreg.R
+#
+# read in
+FILTER_FOR_TTHTTSRECRUITSTAGES <- read.csv("./rawData/FILTER_FOR_TTHTTSRECRUITSTAGES.csv", check.names = TRUE)
+
+# create RDA object
+usethis::use_data(FILTER_FOR_TTHTTSRECRUITSTAGES, overwrite = TRUE)
+
+## remove data object
+# rm(FILTER_FOR_TTHTTSRECRUITSTAGES)
+#
+
+
+## ########################################################################
+st <- forcats::as_factor(c(
+                    tolower("CandidateSubmit"),
+                    tolower("Sifting"),
+                    tolower("PlanningInter"),
+                    tolower("BookingInter"),
+                    tolower("PauseforInter"),
+                    tolower("InterProc"),
+                    tolower("ProcResults"),
+                    tolower("PauseWaitPreEmpCh"),
+                    tolower("TotalPreEmpCh"),
+                    tolower("TotalTimetoHire"),
+                    tolower("OnboardFormFilled"),
+                    tolower("PreempCheckStart"),
+                    tolower("PECsProcess"),
+                    tolower("PreempCheckExtend"),
+                    tolower("PreempCheckFinish"),
+                    tolower("RollingSifting")
+                    )
+                    )
+
+#st[6]
+# y<-vector(mode="list",length=0)
+# y
+# for (i in 1:length(st)){
+#    y[i]<-st[i] #last(ntile(x[1:i],10))
+# }
+#
+# y[1:16]
+
+
+#```{r, echo=FALSE}
+## noprint
+##
+# Proc Means N data=WORK.FILTER_FOR_TTHTTSRECRUITSTAGES noprint;
+#  var &&st&i;
+#  by BG_TTH ProcessFinishMonth 'Rolling Campaign'n;
+#  output out=work.freq&&st&i(drop= _type_ _freq_)  n=N_&&st&i mean=Mean_&&st&i min = Min_&&st&i max=Max_&&st&i median=Median_&&st&i;
+# run;
+#
+# %end;
+## summarise the list of columns of dataframe
+#summarise_at(mydata, vars(mpg, hp), funs(n(), mean, median))
+
+#for (i in length(st)) {
+vs_s <- FILTER_FOR_TTHTTSRECRUITSTAGES %>%
+  group_by(bg_tth,
+            processfinishmonth,
+            rolling.campaign) %>%
+  # summarise the list of columns of dataframe
+  summarise_at(vars(st), funs(n(), mean, min, max, median)) %>%
+  ungroup()
+#}
+    # summarise_at(
+    #   vars(st[i]),
+    #   # Auto named with `tibble::lst()`:
+    #   tibble::lst(
+    #   n(., na.rm=TRUE),
+    #   mean(., na.rm=TRUE),
+    #   min(. ,na.rm=TRUE),
+    #   max(. ,na.rm=TRUE),
+    #   median(., na.rm=TRUE))) %>%
+    # summarise all the list of numeric variable of dataframe
+    #summarise_if(mydata, is.numeric, funs(n(),mean,median)) %>%
+
+# Print the table
+view(vs_s)
+
+##  Data:filter TTHTTSRECRUITSTAGES table based on
+#raws beteen date1 & date2, with TotalTimetoHire NOT NULL and
+#greater equal to zeros & NOT NULL BG_TTH
+
+```
+## ########################## SAS code ############################ ##
+/*Producing summary stats*/
+## ########################## Summary ############################ ##
+
+## 4. TTS Summary table main roll-nonroll
+
+Time to sign
+
+```{sas}
+PROC SQL;
+   CREATE TABLE WORK.BGsSummaryroll AS 
+   SELECT t1.BG_TTH, 
+          t1.ProcessFinishMonth, 
+		  t1.'Rolling Campaign'n,
+
+		  t1.Mean_CandidateSubmit,
+		  t2.Mean_Sifting,
+		  t3.Mean_PlanningInter, 
+          t4.Mean_BookingInter, 
+          t5.Mean_PauseforInter,
+		  t6.Mean_InterProc,
+		  t7.Mean_ProcResults,
+		  t8.Mean_PauseWaitPreEmpCh,
+		  t9.Mean_TotalPreEmpCh,
+		  t10.Mean_TotalTimetoHire,
+		  t11.Mean_OnboardFormFilled,
+		  t12.Mean_PreempCheckStart,
+		  t13.Mean_PECsProcess,
+		  t14.Mean_PreempCheckExtend,
+		  t15.Mean_PreempCheckFinish,
+		  t16.Mean_RollingSifting,
+		  
+
+		  t1.N_CandidateSubmit,
+		  t2.N_Sifting,
+		  t3.N_PlanningInter, 
+          t4.N_BookingInter, 
+          t5.N_PauseforInter,
+		  t6.N_InterProc,
+		  t7.N_ProcResults,
+		  t8.N_PauseWaitPreEmpCh,
+		  t9.N_TotalPreEmpCh,
+		  t10.N_TotalTimetoHire,
+		  t11.N_OnboardFormFilled,
+		  t12.N_PreempCheckStart,
+		  t13.N_PECsProcess,
+		  t14.N_PreempCheckExtend,
+		  t15.N_PreempCheckFinish,
+		  t16.N_RollingSifting,
+
+		  t10.Min_TotalTimetoHire,
+		  t10.Max_TotalTimetoHire,
+		  t10.Median_TotalTimetoHire
+
+      FROM 
+			WORK.FREQCandidateSubmit t1,
+			WORK.FREQSifting t2,
+			WORK.FREQPLANNINGINTER t3, 
+			WORK.FREQBOOKINGINTER t4, 
+			WORK.FREQPauseforInter t5,
+			WORK.FREQInterProc t6,
+			WORK.FREQProcResults t7,
+			WORK.FREQPauseWaitPreEmpCh t8,
+			WORK.FREQTotalPreEmpCh t9,
+			WORK.FREQTotalTimetoHire t10,
+			WORK.FREQOnboardFormFilled t11,
+			WORK.FREQPreempCheckStart t12,
+			WORK.FREQPECsProcess t13,
+			WORK.FREQPreempCheckExtend t14,
+			WORK.FREQPreempCheckFinish t15,
+			WORK.FREQRollingSifting t16
+
+
+      WHERE (
+			t1.BG_TTH = t2.BG_TTH AND t1.ProcessFinishMonth = t2.ProcessFinishMonth AND t1.'Rolling Campaign'n = t2.'Rolling Campaign'n
+		AND t1.BG_TTH = t3.BG_TTH AND t1.ProcessFinishMonth = t3.ProcessFinishMonth AND t1.'Rolling Campaign'n = t3.'Rolling Campaign'n
+		AND t1.BG_TTH = t4.BG_TTH AND t1.ProcessFinishMonth = t4.ProcessFinishMonth AND t1.'Rolling Campaign'n = t4.'Rolling Campaign'n
+		AND t1.BG_TTH = t5.BG_TTH AND t1.ProcessFinishMonth = t5.ProcessFinishMonth AND t1.'Rolling Campaign'n = t5.'Rolling Campaign'n
+		AND t1.BG_TTH = t6.BG_TTH AND t1.ProcessFinishMonth = t6.ProcessFinishMonth AND t1.'Rolling Campaign'n = t6.'Rolling Campaign'n
+		AND t1.BG_TTH = t7.BG_TTH AND t1.ProcessFinishMonth = t7.ProcessFinishMonth AND t1.'Rolling Campaign'n = t7.'Rolling Campaign'n
+		AND t1.BG_TTH = t8.BG_TTH AND t1.ProcessFinishMonth = t8.ProcessFinishMonth AND t1.'Rolling Campaign'n = t8.'Rolling Campaign'n
+		AND t1.BG_TTH = t9.BG_TTH AND t1.ProcessFinishMonth = t9.ProcessFinishMonth AND t1.'Rolling Campaign'n = t9.'Rolling Campaign'n
+		AND t1.BG_TTH = t10.BG_TTH AND t1.ProcessFinishMonth = t10.ProcessFinishMonth AND t1.'Rolling Campaign'n = t10.'Rolling Campaign'n
+		AND t1.BG_TTH = t11.BG_TTH AND t1.ProcessFinishMonth = t11.ProcessFinishMonth AND t1.'Rolling Campaign'n = t11.'Rolling Campaign'n
+		AND t1.BG_TTH = t12.BG_TTH AND t1.ProcessFinishMonth = t12.ProcessFinishMonth AND t1.'Rolling Campaign'n = t12.'Rolling Campaign'n
+		AND t1.BG_TTH = t13.BG_TTH AND t1.ProcessFinishMonth = t13.ProcessFinishMonth AND t1.'Rolling Campaign'n = t13.'Rolling Campaign'n
+		AND t1.BG_TTH = t14.BG_TTH AND t1.ProcessFinishMonth = t14.ProcessFinishMonth AND t1.'Rolling Campaign'n = t14.'Rolling Campaign'n
+		AND t1.BG_TTH = t15.BG_TTH AND t1.ProcessFinishMonth = t15.ProcessFinishMonth AND t1.'Rolling Campaign'n = t15.'Rolling Campaign'n
+		AND t1.BG_TTH = t16.BG_TTH AND t1.ProcessFinishMonth = t16.ProcessFinishMonth AND t1.'Rolling Campaign'n = t16.'Rolling Campaign'n
+
+
+);
+QUIT;
+
+proc datasets nodetails nolist;
+   delete FREQCandidateSubmit FREQPLANNINGINTER FREQBOOKINGINTER FREQPauseforInter FREQInterProc FREQProcResults FREQPauseWaitPreEmpCh FREQTotalPreEmpCh
+FREQTotalTimetoHire FREQOnboardFormFilled FREQPreempCheckStart FREQPECsProcess FREQPreempCheckExtend FREQPreempCheckFinish FREQSifting
+FREQRollingSifting;
+run;
+```
+## ######################### R code #################################  CREATE TABLE BGsSummaryroll 
+```{sas}
+
+
+
+
+```
+
+##
+## ########################## TTS summary ############################ ##
+## 5. TTS Summary table main roll-nonroll
+
+
+## ########################## SAS code ############################ ##
+/*Producing summary stats*/
+## ########################## SQL code ############################ ##
+/*Adding Labels*/
+
+## ########################## R code ############################ ##
+## R code 
+/*Adding Labels*/
+
+
+```{r, echo=FALSE} 
+## noprint
+## 
+# Proc Means N data=WORK.FILTER_FOR_TTHTTSRECRUITSTAGES noprint;
+#  var &&st&i;
+#  by BG_TTH ProcessFinishMonth 'Rolling Campaign'n;
+#  output out=work.freq&&st&i(drop= _type_ _freq_)  n=N_&&st&i mean=Mean_&&st&i min = Min_&&st&i max=Max_&&st&i median=Median_&&st&i;
+# run;
+```
+##  Data:filter TTHTTSRECRUITSTAGES table based on
+#raws beteen date1 & date2, with TotalTimetoHire NOT NULL and 
+#greater equal to zeros & NOT NULL BG_TTH
+```{r}
+
+#      WHERE t1.ProcessFinishMonth BETWEEN &date1. AND &date2. AND #t1.TotalTimetoHire NOT IS MISSING AND 
+#           t1.BG_TTH NOT IS MISSING AND t1.TotalTimetoHire >= 0;
+#           
+## FILTER_FOR_TTHTTSRECRUITSTAGES <- query_table_dates(tbl, dt1 = date1, dt2 = date2)
+
+
+```
+
+## ###########################################################################
+## 
+## ###########################################################################
+
+```{r}
+
+```
+## ################################################################ 
+
+```{r}
+
+```
+
+
+## copy data into new dataset  --------------------------------------
+
+```{r}
+# copy dataforsas  --------------------------------------
+# (2) copy dataforsas 
+# 
+
+# The corresponding s3 bucket
+bucket <- "alpha-hr-arm-main"
+
+raw <- "All_Applications_Jan-22.csv"
+
+# corresponding s3 path to the data file
+s3_directory <- "data/oleeo_data/processed_data/recruitment_main_data/Jan-22"
+
+## Concatenate vectors after converting to character.
+s3_path <- paste0("s3://", bucket, "/", s3_directory, "/", raw)
+s3_path
+#
+FUN <- data.table::fread
+dataset_type <- 1  # tibble: 1 (default)
+database_name <- "tth"
+database_name
+
+column_name <- colnames(maindatabase)[31]
+column_name
+
+table_name <- QUERY_FOR_PREEMP_COMPLETE_MINMAX100
+table_name
+
+query_table_months(database_name, table_name, column_name, date1, date2)
+## s3_path <- paste0("s3://alpha-hr-arm-main/data/oleeo_data/processed_data/recruitment_main_data/Jan-22/All_Applications_Jan-22.csv")
+## devtools::load_all(".")
+gc() 
+
+#rm(list = c("dt"))
+## work_maindatabase <- create_data_object(FUN, s3_path, dataset_type)
+
+gc() 
+
+## download csv file (raw data and place it in rawData folder locally)
+Rs3tools::download_file_from_s3('s3://alpha-hr-arm-main/data/oleeo_data/processed_data/recruitment_main_data/Jan-22/All_Applications_Jan-22.csv', '~/RecruitmentTimeToHire/rawData/All_Applications_Jan-22.csv', overwrite = TRUE)
+
+gc()
+
+# dataset csv file 
+allapplfinal_final <- read.csv('~/RecruitmentTimeToHire/rawData/All_Applications_Jan-22.csv')
+
+
+#View(TTHTTS_allapplfinal)
+
+## For WHERE use filter & use -------------------------------------------------
+##  hr-arm-recruitment-data-processing/R/00_data_for_sas/dfs_applications.R
+
+# maindatabase <- allapplfinal_final[c(
+library(dplyr)
+maindatabase <- allapplfinal_final %>% dplyr::select(c(tolower("SubmissionDate"),
+                              tolower("ApplicationID"),
+                              tolower("VacancyEventID"),
+                              tolower("VacancyEventTitleText"),
+                              tolower("CandidateID"),
+                              tolower("BuildingSite"),
+                              tolower("BusinessAreaMerged"),
+                              tolower("Vacancy.Status..List."),# in SAS: "Vacancy Status (List)'n"
+                              tolower("Last.Status.Change"),# in SAS: "Last Status Change'n"
+                              tolower("MeritListContract"),
+                              tolower("MeritListPeriod"), 
+                              tolower("MeritListContract"), 
+                              tolower("GeographicalArea"),
+                              tolower("ReserveListInitial"),
+                              tolower("MeritListInitial"),
+                              tolower("TimestampVacancyLive"),
+                              tolower("TimestampClosedforApplications"),
+                              tolower("CostCentreClean"),
+                              tolower("Cost.centre.description"),# in SAS: "Cost centre description'n"
+                              tolower("Group.Area"),# in SAS: "Group Area'n"
+                              tolower("Division"),
+                              tolower("MatchCostCentre"),
+                              tolower("BusinessGroupAll"),
+                              tolower("AgencyAll"),
+                              tolower("DataCleanseFlag"),
+                              tolower("HMPPSRoleTypes"),
+                              tolower("AllocFinal"),
+                              tolower("HMPPSAgency"),
+                              tolower("HMPPSPrisonType"),
+                              tolower("ProcessFinish"),
+                              tolower("PreemploymentChecksComplete"),
+                              tolower("ProcessFinishMonth"),
+                              tolower("TimetoSignDate"),
+                              tolower("TimetoSignMonth"),
+                              tolower("PriorityRecruit"),
+                              tolower("Rolling.Campaign"),# in SAS: "Rolling Campaign'n"
+                              tolower("PriorityorRoll"),
+                              tolower("FamilVisit"),
+                              tolower("ProvisionalOffer"),
+                              tolower("FormalOfferMade"),
+                              tolower("FormalOfferAccepted"),
+                              tolower("ResorMeritList"),
+                              tolower("CandidateSubmit"),
+                              tolower("SubmissionDateD"),
+                              tolower("Sifting"),
+                              tolower("SelectedforInterview1D"),
+                              tolower("GamificationTestInProgress"),
+                              tolower("AssessmentDaySelected"),
+                              tolower("AssessmentDayInvited"),
+                              tolower("AssessmentDayBooked"),
+                              tolower("RollingSifting"),
+                              tolower("PlanningInter"),
+                              tolower("InterviewinvitedD"),
+                              tolower("BookingInter"),
+                              tolower("InterviewscheduledD"),
+                              tolower("PauseforInter"),
+                              tolower("Lastbookedinterviewdate"),
+                              tolower("InterProc"),
+                              tolower("ProcResults"),
+                              tolower("PauseWaitPreEmpCh"),
+                              tolower("OnboardingFormD"),
+                              tolower("TotalPreEmpCh"),
+                              tolower("OnboardFormFilled"),
+                              tolower("OnboardingFormSubmittedD"),
+                              tolower("PreempCheckStart"),
+                              tolower("PreEmploymentChecksinProgD"),
+                              tolower("PECsProcess"),
+                              tolower("PreempCheckExtend"),
+                              tolower("PreEmploymentChecksContinuedD"),
+                              tolower("PreempCheckFinish"),
+                              tolower("TotalTimetoHire"),
+                              tolower("CollatingContract"),
+                              tolower("SigningContract"),
+                              tolower("ContractProcedure"),
+                              tolower("GradeMoJ"),
+                              tolower("Grade"),
+                              tolower("promotion"),
+                              tolower("ApplicationStatusText"),
+                              tolower("nonOleeoRecruitmentStage"),
+                              tolower("nonOleeoRecruitment"),
+                              tolower("HMCTSregions"),
+                              tolower("Currentemploymentstatus"),
+                              tolower("Region"),
+                              tolower("TidyNINumber")
+                              ))#]
+# save enviroment data
+save(maindatabase, file = ".RData")
+# save data as data frame
+maindatabase_df <- data.frame(maindatabase)
+# takes an R object, a write function with file as a parameter specifying the path to the data, and a full S3 path as parameters.
+botor::s3_write(maindatabase_df, readr::write_csv, 
++                 "s3://alpha-hr-arm-main/data/oleeo_data/processed_data/recruitment_main_data/Jan-22/maindatabase.csv")
+
+PREEMP_COMPLETE_MINMAX <- maindatabase
+
+test.PREEMP_COMPLETE_MINMAX <- PREEMP_COMPLETE_MINMAX
+
+library(lubridate)
+
+test.PREEMP_COMPLETE_MINMAX %>%
+   mutate(SampleDate=str_sub(SampleTime,start=0,end=10))%>%
+   mutate(date = mdy(SampleDate))
+
+## order raws -----------------------------------------------------------------
+## 
+## Order rows by values of a column (high to low).
+maindatabase_order <- dplyr::arrange(maindatabase, desc(ProcessFinishMonth))
+##
+
+
+PREEMP_COMPLETE_MINMAX %>% select(c(tolower("ApplicationID"),
+                                  tolower("VacancyEventID"),
+                                  tolower("ApplicationStatusText"), 
+                                  tolower("CostCentreClean"), 
+                                  tolower("Grade"), 
+                                  tolower("TimestampVacancyLive"),
+                                  tolower("SubmissionDate"),
+                                    tolower("TimestampClosedforApplications"),
+                                    tolower("PreemploymentChecksComplete"), 
+                                    tolower("TidyNINumber"), 
+                                    tolower("HMCTSregions"), 
+                                    tolower("BusinessAreaMerged"), 
+                                    tolower("Group.Area"),# in SAS: "Group Area'n"
+                                    tolower("Division"),
+                                    tolower("MatchCostCentre"),
+                                    tolower("AgencyAll"),
+                                    tolower("BusinessGroupAll"),
+                                    tolower("ProcessFinish"),
+                                    tolower("ProcessFinishMonth"),
+                                    tolower("TimetoSignDate"), 
+                                    tolower("TimetoSignMonth"), 
+                                    tolower("PriorityRecruit"), 
+                                    tolower("Rolling.Campaign"),# in SAS: "Rolling Campaign'n"
+                                    tolower("PriorityorRoll"), 
+                                    tolower("FamilVisit"), 
+                                    tolower("SubmissionDateD"), 
+                                    tolower("GamificationTestInProgress"), 
+                                    tolower("AssessmentDaySelected"), 
+                                    tolower("AssessmentDayInvited"), 
+                                    tolower("AssessmentDayBooked"), 
+                                    tolower("ProvisionalOffer"), 
+                                    tolower("FormalOfferAccepted"), 
+                                    tolower("FormalOfferMade"), 
+                                    tolower("SelectedforInterview1D"), 
+                                    tolower("InterviewinvitedD"), 
+                                    tolower("InterviewscheduledD"), 
+                                    tolower("OnboardingFormSubmittedD"), 
+                                    tolower("Lastbookedinterviewdate"), 
+                                    tolower("PreEmploymentChecksinProgD"), 
+                                    tolower("OnboardingFormD"), 
+                                    tolower("PreEmploymentChecksContinuedD"),
+                                    tolower("CandidateSubmit"), 
+                                    tolower("Sifting"), 
+                                    tolower("RollingSifting"), 
+                                    tolower("PlanningInter"), 
+                                    tolower("BookingInter"), 
+                                    tolower("PauseforInter"), 
+                                    tolower("InterProc"), 
+                                    tolower("ProcResults"), 
+                                    tolower("PauseWaitPreEmpCh"), 
+                                    tolower("TotalPreEmpCh"), 
+                                    tolower("OnboardFormFilled"), 
+                                    tolower("PreempCheckStart"), 
+                                    tolower("PECsProcess"), 
+                                    tolower("PreempCheckExtend"), 
+                                    tolower("PreempCheckFinish"), 
+                                    tolower("TotalTimetoHire"), 
+                                    tolower("CollatingContract"), 
+                                    tolower("SigningContract"), 
+                                    tolower("ContractProcedure"), 
+                                    tolower("GradeMoJ"), 
+                                    tolower("promotion"), 
+                                    tolower("HMPPSAgency"), 
+                                    tolower("HMPPSPrisonType"), 
+                                    tolower("HMPPSRoleTypes"), 
+                                    tolower("AllocFinal"), 
+                                    tolower("Currentemploymentstatus"), 
+                                    tolower("nonOleeoRecruitment"), 
+                                    tolower("nonOleeoRecruitmentStage"), 
+                                    tolower("Region"), 
+                                    tolower("DataCleanseFlag"), 
+                                    tolower("ResorMeritList"), 
+                                    tolower("BuildingSite"), 
+                                    tolower("CandidateID"), 
+                                    tolower("Cost.centre.description"),# in SAS: "Cost centre description'n"
+                                    tolower("GeographicalArea"), 
+                                    tolower("Last.Status.Change"),# in SAS: "Last Status Change'n" 
+                                    tolower("MeritListContract"), 
+                                    tolower("MeritListInitial"), 
+                                    tolower("ReserveListInitial"), 
+                                    tolower("Vacancy.Status..List."),# in SAS: "Vacancy Status (List)'n"
+                                    tolower("VacancyEventTitleText"), 
+                                    tolower("MeritListPeriod"))
+               ) %>% 
+   filter(between(mdy(maindatabase$ProcessFinishMonth), mdy(date1), mdy(date2)) | between(mdy(maindatabase$TimetoSignMonth), mdy(date1), mdy(date2)))
+#   filter(dplyr::between(maindatabase$ProcessFinishMonth, as.Date("2015-09-05"),
+#                  as.Date("2015-09-17")))
+library(stringr)
+test.wq%>%
+   mutate(SampleDate=str_sub(SampleTime,start=0,end=10))%>%
+   mutate(date = mdy(SampleDate))
+# QUERY_FOR_PREEMP_COMPLETE_MINMAX <- maindatabase[c(
+
+
+
+# proc datasets nodetails nolist;
+#    delete TTHTTSREMOUTSCOPE TTHTTSREMOUTSCOPE2;
+# run;
+
+
+# applvac_hmpps_groups[, `:=` (BusinessAreaMerged  = dplyr::if_else((VacancyEventID %in% pqip_campaigns), "HMPPS - National Probation Service", BusinessAreaMerged)
+
+   
+   
+#] %>%  
+#                  df %>% filter(dplyr::between(maindatabase$ProcessFinishMonth, date1[[1L]], date2[[1L]]) | dplyr::between(maindatabase$ProcessFinishMonth, date1[[2L]], date2[[2L]]))
+## 
+## Arrange data ---------------------------------------------------------------
+## Order rows by values of a column (high to low).
+maindatabase_order <- dplyr::arrange(maindatabase, ProcessFinishMonth)
+## 
+## Removing Both Null and missing: ---------------------------------------------
+#By subsetting each column with non NAs and not null is round about way 
+#to remove both Null and missing values as shown below
+## Remove null  & NA values
+## 
+df1 <- tibble(maindatabase)
+### Drop rows with NA or missing values in pyspark
+ 
+df1 %>% drop_na()
+view(df1)
+# df1 %>% 
+df1[!(is.na(df1$ProcessFinishMonth) | df1$ProcessFinishMonth=="") | !(is.na(df1$TimetoSignMonth) | df1$TimetoSignMonth==""),]
+
+library(data.table)
+## convert data frame to data table
+dt1 <- as.data.table(df1)
+dt1[!(is.na(df1$ProcessFinishMonth) | df1$ProcessFinishMonth=="") | !(is.na(df1$TimetoSignMonth) | df1$TimetoSignMonth==""),]
+# df %>%select(Patch,Date,Prod_DL)%>%filter(between(Date, as.Date("2015-09-05"),as.Date("2015-09-17")))
+## WHERE t1.ProcessFinishMonth BETWEEN &date1. AND &date2. OR t1.TimetoSignMonth 
+## BETWEEN &date1. AND  &date2.;
+## df %>% filter(dplyr::between(datetime, start[[1L]], end[[1L]]) | dplyr::between(datetime, start[[2L]], end[[2L]]))
+##  dplyr::if_else(is.na(EqualOpportunitiesEthnicity) == TRUE | 
+## if(nrow(diversity_five %>% dplyr::filter(is.na(EqualOpportunitiesEthnicity) == TRUE)) != 0) stop("Error in fixing Ethnicity field")
+## 
+```
+
+# NOTE: Table WORK.FILTER_FOR_TTHTTSRECRUITSTAGES created, with 70634 rows and 81 columns.
+
+```{sql connection=}
+
+CREATE EXTERNAL TABLE IF NOT EXISTS `alpha-hr-arm-main`.`FILTER_FOR_TTHTTSRECRUITSTAGES` (
+`ApplicationID` string,
+`CandidateID` string,
+`ApplicationStatusText` string,
+`TidyNINumber` string,
+`VacancyEventID` string,
+`VacancyEventTitleText` string,
+`Vacancy Status (List)n` string,
+`Last Status Changen` string,
+`AgencyAll` string,
+`BusinessGroupAll` string,
+`BG_TTH` string,
+`BGexpand` string,
+`BusinessAreaMerged` string,
+`Group.Area` string,
+`Division` string,
+`GradeMoJ` string,
+`promotion` string,
+`Rolling Campaignn` string,
+`PriorityRecruit` string,
+`PriorityorRoll` string,
+`FamilVisit` string,
+`Region` string,
+`GeographicalArea` string,
+`MatchCostCentre` string,
+`CostCentreClean` string,
+`Cost centre descriptionn` string,
+`HMCTSregions` string,
+`HMPPSAgency` string,
+`HMPPSPrisonType` string,
+`HMPPSRoleTypes` string,
+`BuildingSite` string,
+`AllocFinal` string,
+`Currentemploymentstatus` string,
+`Grade` string,
+`ProcessFinishMonth` string,
+`TimetoSignMonth` string,
+`TimestampVacancyLive` string,
+`SubmissionDateD` string,
+`GamificationTestInProgress` string,
+`AssessmentDaySelected` string,
+`AssessmentDayInvited` string,
+`AssessmentDayBooked` string,
+`TimestampClosedforApplications` string,
+`SelectedforInterview1D` string,
+`InterviewinvitedD` string,
+`InterviewscheduledD` string,
+`Lastbookedinterviewdate` string,
+`ProvisionalOffer` string,
+`OnboardingFormD` string,
+`OnboardingFormSubmittedD` string,
+`PreEmploymentChecksinProgD` string,
+`PreemploymentChecksComplete` string,
+`PreEmploymentChecksContinuedD` string,
+`FormalOfferMade` string,
+`FormalOfferAccepted` string,
+`ProcessFinish` string,
+`TimetoSignDate` string,
+`ResorMeritList` string,
+`MeritListInitial` string,
+`ReserveListInitial` string,
+`CandidateSubmit` string,
+`Sifting` string,
+`RollingSifting` string,
+`PlanningInter` string,
+`BookingInter` string,
+`PauseforInter` string,
+`InterProc` string,
+`ProcResults` string,
+`PauseWaitPreEmpCh` string,
+`TotalPreEmpCh` string,
+`OnboardFormFilled` string,
+`PreempCheckStart` string,
+`PECsProcess` string,
+`PreempCheckExtend` string,
+`PreempCheckFinish` string,
+`TotalTimetoHire` string,
+`CollatingContract` string,
+`SigningContract` string,
+`ContractProcedure` string,
+`MeritListPeriod` string,
+`MeritListContract` string
+)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' 
+WITH SERDEPROPERTIES (
+  'serialization.format' = ',',
+  'field.delim' = ','
+) LOCATION 's3://alpha-hr-arm-main/'
+TBLPROPERTIES ('has_encrypted_data'='false');
+
+```
+
+
+
+
+```{r}
+## corresponding s3 path to the data file
+s3_directory <- "data/oleeo_data/processed_data/recruitment_main_data/Jan-22"
+
+## Concatenate vectors after converting to character.
+s3_path <- paste0("s3://", s3_directory, "/", data_file)
+#
+FUN <- data.table::fread
+dataset_type <- 1  # tibble: 1 (default)
+
+## devtools::load_all(".")
+gc() 
+#rm(list = c("dt"))
+work_maindatabase <- create_data_object(FUN, s3_path, dataset_type)
+
+## if csv file was saved locally
+#csv_file<-read.csv(path, stringsAsFactors = FALSE)
+
+## ################# create RDA object #################### ##
+### data_Object_All_App <- create_data_object(s3_path)
+
+# View(data_Object_All_App)
+
+# save data
+## save.image("~/RecruitmentTimeToHire/dataObject150322.RData")
+
+
+## make it reproducible
+set.seed(1)
+
+# define data
+df_data_Object_All_App <- data.frame(data_Object_All_App)
+
+# view head of data 
+head(df_data_Object_All_App)
+
+## use save to store multiple data frames in a single .rda file
+## use save to load( ) will restore all of these
+## 
+## 
+#save(data_in_use, file = file_location/saved_data.rda)
+#or
+#setwd(file_location)
+#save(data_in_use, file = saved_data.rda) 
+## 
+#load(file_location/saved_data.rda)
+#or
+#setwd(file_location)
+#load(saved_data.rda)
+#
+#
+# to read these back in, you simply need to use the following code...
+# s3tools::read_using(readRDS,"full_file_path")
+# 
+# e.g. 
+
+```
+
+# 
+# PROC SQL;
+#    CREATE TABLE WORK.maindatabase AS 
+#    SELECT t1.
+# 
+#        FROM TTHTTS.allapplfinal_final t1;
+# QUIT;
+# 
+# 
+# /*NOTE: Table WORK.QUERY_FOR_PREEMP_COMPLETE_MINMAX created, with 77440 rows and 83 columns.*/
+# 
+# PROC SQL;
+#    CREATE TABLE WORK.QUERY_FOR_PREEMP_COMPLETE_MINMAX AS 
+#    SELECT t1.
+#    
+# FROM WORK.MAINDATABASE t1
+#       WHERE t1.ProcessFinishMonth BETWEEN &date1. AND &date2. OR t1.TimetoSignMonth BETWEEN &date1. AND 
+#            &date2.;
+# QUIT;
+# 
+# PROC SQL;
+#    CREATE TABLE WORK.TTHTTSRemoutscope AS 
+#    SELECT t1.
+#       FROM WORK.QUERY_FOR_PREEMP_COMPLETE_MINMAX t1
+#       WHERE t1.BusinessGroupAll NOT IS MISSING AND t1.VacancyEventID NOT = 10182 AND t1.VacancyEventID NOT = 9701 AND 
+#            t1.VacancyEventID NOT = 12108 AND t1.VacancyEventID NOT = 14150 AND t1.VacancyEventID NOT = 14904 AND 
+#            t1.VacancyEventID NOT = 15575 AND t1.VacancyEventID >= . AND t1.VacancyEventID NOT = 16748 AND 
+#            t1.VacancyEventID NOT = 18041 AND t1.VacancyEventID NOT = 8093 AND t1.VacancyEventID NOT = 12242 AND 
+#            t1.VacancyEventID NOT = 19651 AND t1.VacancyEventID NOT = 19493 AND t1.VacancyEventID NOT = 23076 AND 
+#            t1.VacancyEventID NOT = 23657 AND t1.VacancyEventID NOT = 23659 AND t1.VacancyEventID NOT = 15575 AND 
+#            t1.VacancyEventID NOT = 21751 AND t1.VacancyEventID NOT = 26066 AND t1.VacancyEventID NOT = 22844 AND 
+#            t1.VacancyEventID NOT = 17837 AND t1.nonOleeoRecruitment NOT = 'No' AND t1.nonOleeoRecruitmentStage = '' AND 
+#            t1.VacancyEventID NOT = 26563 AND t1.VacancyEventID NOT = 27289 AND t1.VacancyEventID NOT = 27430 AND 
+#            t1.VacancyEventID NOT = 27406 AND t1.VacancyEventID NOT = 29657 AND t1.ApplicationID NOT = 147747 AND 
+#            t1.VacancyEventID NOT = 32429 AND t1.ApplicationID NOT = 2125832 AND t1.VacancyEventID NOT = 33261 AND 
+#            t1.VacancyEventID NOT = 30972 AND t1.VacancyEventID NOT = 33453 AND t1.VacancyEventTitleText NOT = 
+#            '"Unlocked Graduate Scheme Cohort 5"';
+# QUIT;
+# 
+# 
+# PROC SQL;
+#    CREATE TABLE WORK.TTHTTSREMOUTSCOPE2_0000 AS 
+#    SELECT t1.
+#       FROM WORK.TTHTTSREMOUTSCOPE t1
+#       WHERE t1.DataCleanseFlag = 'Yes';
+# QUIT;
+# 
+# PROC SQL;
+#    CREATE TABLE WORK.TTHTTSREMOUTSCOPE2 AS 
+#    SELECT t1.
+#       FROM WORK.TTHTTSREMOUTSCOPE t1
+#       WHERE t1.DataCleanseFlag NOT = 'Yes';
+# QUIT;
+```
+
+## Use the package::function() form when calling stringr::str_split(). This specifies that we want to call the str_split() function from the stringr namespace.
+```{r}
+use_package("stringr")
+
+str_split_one <- function(string, pattern, n = Inf) {
+  stopifnot(is.character(string), length(string) <= 1)
+  if (length(string) == 1) {
+    stringr::str_split(string = string, pattern = pattern, n = n)[[1]]
+  } else {
+    character()
+  }
+}
+
+rename_files("strsplit1", "str_split_one")
+
+```
+
+
+
+
+
+
+
+## ################################################################ ##
+## ################################################################ ##
+
+## ? 6. MoJ HQ Dirs evaluate 
+## ? 7. MoJ HQ Regions evaluate 
+## ? 8. HMCTS Regions
+
+## 9. Summary table main - source of appl -rolling-non-rolling
+
+## ? 10. Prison Groups
+
+## ################################################################ ##
+## #######################  Groups breakdown  ############################## ##
+
+
+## ########################## R code ############################ ##
+## R code /*Grouping & Producing summary stats*/
+
+```{r}
+
+```
+
+
+## ################################################################ ##
+## ################################################################ ##
+
+
+## ################################################################ ##
+## #######################  Groups breakdown  ############################## ##
+## 11. HMPPS Groups breakdown All prison types
+## 12. HMPPS Groups breakdown -All
+
+## ########################## SAS code ############################ ##
+/*Groups breakdown*/
+```{r}
+
+```
+
+
+## ########################## R code ############################ ##
+## R code /*Grouping & Producing summary stats*/
+
+```{r}
+
+```
+
+
+## ################################################################ ##
+## #######################  Rolling  ############################## ##
+
+
+## 13. HMPPS Groups breakdown rolling-non-rolling
+
+## ? 14. Append Table
+
+## ? 15. Histogram
+
+## 16. Export TTH Excel File
+
+
+
+## ########################## R code ############################ ##
+## R code /*Grouping & Producing summary stats*/
+
+
+
+```{r}
+library(botor)
+
+## ############# reading S3 bucket function #################### ##
+## 
+use_r("read_using")
+
+source("~/RecruitmentTimeToHire/R/read_using.R")
+
+## read RDA object from S3 bucket ----------------------------------------------
+DataForSAS_Applications <- read_using(readRDS, "s3://alpha-hr-arm-main/data/oleeo_data/raw_data/all_applications/Jan-22/DataForSAS_Applications.rds")
+# 
+DataForSAS_Applications_Only_SAS <- read_using(readRDS, "s3://alpha-hr-arm-main/data/oleeo_data/raw_data/all_applications/Jan-22/DataForSAS_Applications_Only_SAS.rds")
+# 
+DataForSAS_Applications_Overspill_SAS <- read_using(readRDS,"s3://alpha-hr-arm-main/data/oleeo_data/raw_data/all_applications/Jan-22/DataForSAS_Applications_Overspill_SAS.rds")
+##
+## ############# download file from S3 bucket Function #################### ##
+## 
+use_r("download_file_from_s3")
+
+source("~/RecruitmentTimeToHire/R/download_file_from_s3.R")
+
+## 
+## ## read SAS --------------------------------------------------------------------
+## 
+s3_path <- "s3://alpha-hr-arm-main/data/oleeo_data/raw_data/all_applications/Jan-22/dataforsas.sas7bdat"
+#
+getwd()
+
+download_file_from_s3(s3_path, 
+                      "~/RecruitmentTimeToHire/dataforsas.sas7bdat",
+                      overwrite = TRUE)
+##
+
+
+dataforsas <- read_using(FUN = haven::read_sas("/tmp/RtmptvISMQ/file341b661442e7.sas7bdat"), s3_path)
+# write_sas(mtcars, "mtcars.sas7bdat")
+
+
+```
+
+## SQL translation
+There are two components to dplyr’s SQL translation system:
+•	translation of vector expressions like x * y + 10
+•	translation of whole verbs like mutate() or summarise()
+
+To explore them, you’ll need to load both dbplyr and dplyr:
+
+•	translate_sql(x)
+•	#> <SQL> "x"
+•	# And strings are escaped by single quotes
+•	translate_sql("x")
+#> <SQL> 'x'
+translate_sql(if (x > 5) "big" else "small")
+#> <SQL> CASE WHEN ("x" > 5.0) THEN ('big') WHEN NOT("x" > 5.0) THEN ('small') END
+
+
+
+```{r}
+## ?? Do I need to do similar to ##https://github.com/moj-analytical-services/hr-arm-recruitment-data-processing/blob/main/R/0_map##ping_input.R
+
+# Load data --------------------------------------
+# ## (1) set working directory for the located data files
+# 
+# identify working directory
+getwd()
+
+# dataset file name
+data_file <- "MoJ HQ location coordinates.csv"
+
+## set source location for mapping files
+## 
+# path foe the main directory containing the input SAS data file
+mapping_directory <- "\\dom1.infra.int/data/hq/102PF/Shared/Group_LCDSHD2/Analytical Services/CICFAS/Teams/HR-ARM/HR Analysis/Time to Hire/2021/December 2021/MK/Source Files"
+
+## set source location for lookup files
+## 
+# path foe the main directory containing the lookup SAS data file
+
+lookup_directory <- "L:/CICFAS/HR-ARM/PRM/Projects/MEP Project/07 QA/04 JMT Checks/60 TTH TTS Info/TTH Lookup Files"
+
+# set working directory --------------------------------------
+# ## (1) set working directory for the located data files
+
+
+# set the base path for the database
+base_directory <- "\\bbp-dca-sas002/l/CICFAS/HR-ARM/PRM/Projects/MEP Project/07 QA/04 JMT Checks/60 TTH TTS Info/Old versions/Applicants extract 04Jan2022" 
+
+# dataset file name
+data_file <- "All_Applications_Jan-22.csv"
+
+# set working directory to the relevant source
+#setwd()
+# mapping_file <- paste0(mapping_directory, "/", data_file)
+
+path_to_maindatabase <- paste0(base_directory, "/", data_file)
+
+
+# options mprint symbolgen;
+# 
+# copy dataforsas  --------------------------------------
+# (2) copy dataforsas 
+# 
+# copy data into new dataset  --------------------------------------
+TTHTTS_allapplfinal_final_mar21v1 <- data_file
+   
+work_maindatabase <- TTHTTS.allapplfinal_final_mar21v1
+
+## if csv file was saved locally
+csv_file<-read.csv(path, stringsAsFactors = FALSE)
+#
+# Checking number of Rows and Columns
+#dim(data_Object_All_App)
+# Reading names of First 3 columns
+#names(csv_file)[1:3]
+
+## NOTE: Table WORK.MAINDATABASE created, with 1390541 rows and 83 columns.*/
+# 
+
+
+```
+
+
+## ################################################################ ##
+## ################################################################ ##
+## 5-	Output files
+# -  Output files for each set of breakdowns are produced in .csv format.
+
+## ########################## SAS code ############################ ##
+/*Output files*/
+
+## 16. Export TTH Excel File
+```{r}
+# proc export data=work.FILTER_FOR_TTHTTSRECRUITSTAGES
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\TTHTTSRECRUITSTAGES Dec-21_v1.csv'
+# dbms=CSV replace;
+# run;
+# 
+# proc export data=work.POWERBIINPUT
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\Dec-21 Power BI Input v1.csv'
+# dbms=CSV replace;
+# run;
+# 
+# proc export data=work.MOJHQDIRSINPUT
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\Dec-21 MOJHQDIRSINPUT v1.csv'
+# dbms=CSV replace;
+# run;
+# /*BNA - Added this in for histogram*/
+# proc export data=work.MOJHQREGSINPUT2
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\MOJHQREGSINPUT Dec-21_v1.csv'
+# dbms=CSV replace;
+# run;
+# 
+# proc export data=work.HMCTSREGIONS_INPUT
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\HMCTS Regions Dec-21_v1.csv'
+# dbms=CSV replace;
+# run;
+# 
+# proc export data=work.SOURCEOFAPPLICINPUT
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\SourceofApplicInput Dec-21_v1.csv'
+# dbms=CSV replace;
+# run;
+# 
+# proc export data=work.PRISON_LOCATIONS_FINAL
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\Prison_Locations_Dec21_v1.csv'
+# dbms=CSV replace;
+# run;
+# 
+# proc export data=work.HMPPSbreakdownInput
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\HMPPSBREAKDOWNDec21_v1.csv'
+# dbms=CSV replace;
+# run;
+# /*BNA - Added this in for histogram*/
+# proc export data=work.Histogram_Tableau
+# outfile='\\bbp-dca-sas002\L\CICFAS\HR-ARM\PRM\Projects\MEP Project\07 QA\04 JMT Checks\60 TTH TTS Info\Old versions\Temp\Histogram_Tableau_Dec-21_v1.csv'
+# dbms=CSV replace;
+# run;
+
+```
+
+## ########################## R code ############################ ##
+## R code /*Output files*/
+
+```{r}
+
+```
+
+## ################################################################ ##
+## ################################################################ ##
+
+
+
+## ########################## Histogram ############################ ##
+
+/*Histogram*/
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+#plot(pressure)
+```
+%let grade1 =HMCTS;
+%let grade2 =HMPPS;
+%let grade3 =MoJ HQ, LAA, OPG & CICA;
+%put &grade3;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# create variables in the function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+PROC SQL;
+   CREATE TABLE WORK.FILTERHistogramInput AS 
+   SELECT t1.TotalTimetoHire, 
+          t1.ProcessFinishMonth, 
+          t1.BG_TTH
+      FROM WORK.FILTER_FOR_TTHTTSRECRUITSTAGES t1
+      WHERE t1.ProcessFinishMonth = &histmonth.;
+QUIT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## import data from SAS
+```{r}
+WORK.FILTERHistogramInput.SAS <- read_SAS('WORK.FILTER_FOR_TTHTTSRECRUITSTAGES.SAS7bdat')
+
+
+# check the input
+head(WORK.FILTERHistogramInput.SAS)
+
+```
+
+
+# data.table(a = c(1, 2), b = c("a", "b"))
+
+# fread("file.csv", select = c("a", "b")) – read specified columns from a flat file into R.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%macro printAll(histmonth, i);
+%DO j=1 %to 3;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+## Defining a function to show all three histograms 
+
+```{r}
+printAll <- function(histmonth, i){
+		for (j in 1:3){
+        statement
+		}
+}
+```
+
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+PROC SQL;
+   CREATE TABLE WORK.FILTER_BGforHist AS 
+   SELECT t1.BG_TTH, 
+          t1.TotalTimetoHire
+      FROM WORK.FILTERHistogramInput t1
+      WHERE t1.BG_TTH = "&&grade&j";
+QUIT;
+
+title "&&grade&j";
+proc univariate data= WORK.FILTER_BGforHist;
+	var TotalTimetoHire;
+	histogram / endpoints=(0 to 240 by 20) outhistogram = Hist&j;
+run;
+
+data Hist&j._&i;
+	set Hist&j;
+	drop _VAR_;
+	rename _MINPT_ = MinBin;
+	rename _OBSPCT_ = PercentBin;
+	rename _COUNT_ = NumberBin;
+	BusinessGroup = "&&grade&j";
+	format month Date9.;
+	month = &histmonth;
+run;
+
+%end;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/* All BGs */
+
+
+
+title "MoJ Overall";
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+proc univariate data= WORK.FILTERHistogramInput;
+	var TotalTimetoHire;
+	histogram / endpoints=(0 to 240 by 20) outhistogram = HistAll;
+run;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+data HistAll_&i;
+	set HistAll;
+	drop _VAR_;
+	rename _MINPT_ = MinBin;
+	rename _OBSPCT_ = PercentBin;
+	rename _COUNT_ = NumberBin;
+	BusinessGroup = "MoJ Overall";
+	format month Date9.;
+	month = &histmonth;
+run;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/*BNA - Added this in to avoid the loop from overwriting each monthly run*/
+data Histogram_&i;
+set HistAll_&i Hist1_&i Hist2_&i Hist3_&i ;
+run;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%mend printAll;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+data _null_;
+do i = 0 to 3;
+call symput('histmonth', intnx('month',&histmonth.,i));
+call symput('i', i);
+call execute('%printAll(&histmonth., &i.)');
+output;
+end;
+run;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+PROC SQL;
+CREATE TABLE WORK.Histogram_Tableau AS 
+SELECT * FROM WORK.Histogram_0
+ OUTER UNION CORR 
+SELECT * FROM WORK.Histogram_1
+ OUTER UNION CORR 
+SELECT * FROM WORK.Histogram_2
+ OUTER UNION CORR 
+SELECT * FROM WORK.Histogram_3
+;
+Quit;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+As discussed yesterday, here are the source files for the Time to Hire report. These are the files that are produced by the SAS process, and feed into the PowerBI report. Currently they are inputted to the PowerBI as a mix of .csv and .xlsx, but we would want them all outputted as .csv from the R process. 
+
+Here’s a quick rundown of what the files are:
+
+The following files produces breakdowns of the average time to hire/ sign, and number of candidates completing pre-employment checks/ signing. They also produce breakdowns for the average time spent at each recruitment stage (e.g. sift, or onboarding), as well as the number of candidates reaching each recruitment stage. The breakdowns are as follows:
+
+MOJHQDIRSINPUT – Directorate/ Group level breakdowns for MoJ HQ, Legal Aid Agency (LAA), Criminal Injuries Compensation Authority (CICA), Office of the Public Guardian.
+PowerBI Input – High level breakdowns by MoJ Overall, MoJ HQ, HMPPS (Prisons and probation), HMCTS (Courts)
+HMCTS Regions – Breakdown by the different “Regions” of HMCTS.
+HMPPSBREAKDOWN – Breakdown by the constituent areas of HMPPS (Prisons, Probation, and HQ), and then further breakdown by individual role types within these.
+MOJHRREGSINPUT – High level breakdown for MoJ HQ, Legal Aid Agency (LAA), Criminal Injuries Compensation Authority (CICA), Office of the Public Guardian.
+Prison_Locations – Breakdown of Prison recruitment by prison type, role type, and prison group. This is just Time to Hire and number hired. 
+SoureofApplicInput – Breakdown by Business Group (MoJ Overall, MoJ HQ, HMPPS, HMCTS), and then by source of application (Internal to MoJ, External to Civil Service, Within Civil Service) 
+
+
+Histogram_Tableau – This file is slightly different, and produces a histogram for each of the past 4 months, of Time to Hire distribution, for each business group (MoJ Overall, MoJ HQ, HMPPS, HMCTS).
+
+## creating the functions and RDA data object
+# create data object --------------------------------------
+```{r}
+## cleanup
+gc() 
+
+# create data object --------------------------------------
+## RDA object
+use_r("create_data_object")
+
+## load data files
+#script for loading in data - all data except for applications and vacancies files
+source("~/RecruitmentTimeToHire/R/create_data_object.R")
+
+## Re-attach devtools
+library(devtools) 
+## 
+## re-load regexcite
+load_all()
+
+#install()
+
+#library(RecruitmentTimeToHire)
+#RecruitmentTimeToHire::create_data_object()
+#create_data_object(FUN, s3_path, dataset_type)
+
+exists("create_data_object", where = globalenv(), inherits = FALSE) #you should see FALSE.
+
+#devtools::load_all(".")
+rm(list = c("create_data_object"))
+
+#create_data_object()
+
+#i.e. a place to read in mapping files, etc.
+#some filenames are affected by the global variable list
+```
+## Commit new function On GitHub ---------------------------------
+#> diff --git RecruitmentTimeToHire/R/create_data_object.R RecruitmentTimeToHire/R/create_data_object.R
+
+## Check the created package 
+```{r}
+## cleanup
+
+gc() 
+
+## check() produces rather voluminous output, optimized for interactive consumption. We intercept that here and just reveal a summary. Your local check() output will be different.
+
+devtools::check()
+```
+
+## install and rebuild the package
+```{r}
+## cleanup
+
+gc() 
+
+#
+## cmd(ctrl) + Shift + D
+##==> 
+#devtools::document(roclets = c('rd', 'collate', 'namespace'))
+
+## cmd(ctrl) + Shift + L
+#devtools::load_all(".")
+#
+```
+
+## initializes the unit testing machinery for the package. It adds Suggests: testthat to DESCRIPTION, creates the directory tests/testthat/, and adds the script tests/testthat.R. 
+
+```{r}
+load_all()
+
+library(testthat)
+
+use_testthat()
+
+use_test("create_data_object")
+
+```
+
+```{r}
+?regreg 
+
+devtools::load_all(".")
+devtools::document(roclets = c('rd', 'collate', 'namespace'))
+
+?regreg 
+rm(list = c("figure_2"))
+```
+
+## ---------------------------------------------- ##
+## QUALITY ASSURRANCE ==> ERROR LOGGING DEBUGGING MESSAGING
+## Converting the data object into minimal tidy dataset and class
+
+# Use futile.logger
+
+# Object Documentation:
+
+see https://r-pkgs.org/man.html
+
+Create a new function: phase_date_data.R
+and place it in R folder
+
+phase_date_data.R:
+```{r}
+devtools::load_all()
+#' @title minimal tidy data set for DataTidying report production.
+#'
+#' @description \code{year_phase_data} is the class used for the creation of all
+#'  figures and tables in the made up RAP report (it's a demo for the RAP MOOC).
+#'
+#'
+#' @details The \code{year_phase_data} class expects a \code{data.frame} with at
+#' least three columns: phase, date (entry-timestamp), and register name. Each
+#' row represents a unique register.
+#'
+#'   Once inititated, the class has five slots: \code{df}: the basic
+#'   \code{data.frame}, \code{colnames}: a character vector containing the
+#'   column names from the \code{df}, \code{phase_levels}: a
+#'   factor vector containing levels of \code{df$phase} of the factor sector,
+#'   \code{yq}: an date vector containing \code{zoo::as.yearqrt(df$date)}.
+#'
+#' @param x Input dataframe, see details.
+#' @param log_level The severity level at which log messages are written from
+#' least to most serious: TRACE, DEBUG, INFO, WARN, ERROR, FATAL. Default is
+#' level is INFO. See \code{?flog.threshold()} for additional details.
+#' @param log_appender Defaults to write the log to "console", alternatively you
+#' can provide a character string to specify a filename to also write to. See
+#' for additional details \code{?futile.logger::appender.tee()}.
+#' @param eda If TRUE an graphical data analysis is conducted for a human to check.
+#'
+#' @return If the class is not instantiated correctly, nothing is returned.
+#'
+#' @examples
+#'
+#' library(DataTidying)
+#'
+#' df <- phase_date_data(regreg)
+#'
+#' @export
+
+
+phase_date_data <- function(x, log_level = futile.logger::WARN,
+                             log_appender = "console", eda = FALSE) {
+
+  # Set logger severity threshold, defaults to
+  # high level use (only flags warnings and errors)
+  # Set log_level argument to futile.logger::TRACE for full info
+  futile.logger::flog.threshold(log_level)
+
+  # Set where to write the log to
+  if (log_appender != "console")
+  {
+    # if not console then to a file called...
+    futile.logger::flog.appender(futile.logger::appender.file(log_appender))
+  }
+
+  # Checks
+  futile.logger::flog.info('Initiating phase_date_data class.
+                           \n\nExpects a data.frame with at
+                           least three columns: phase, date (entry-timestamp),
+                           and register name. Each
+                           row represents a unique register..
+                           More information on the format expected by
+                           this class is given by ?phase_date_data().')
+
+  # Integrity checks on incoming data ----
+
+  # Check the structure of the data is as expected: data.frame containing no
+  # missing values and at least three columns, containing phase, date and register name.
+
+  futile.logger::flog.info('\n*** Running integrity checks on input dataframe (x):')
+  futile.logger::flog.debug('\nChecking input is properly formatted...')
+
+  futile.logger::flog.debug('Checking x is a data.frame...')
+  if (!is.data.frame(x))
+  {
+    futile.logger::flog.error("x must be a data.frame",
+                              x, capture = TRUE)
+  }
+
+  futile.logger::flog.debug('Checking x has correct columns...')
+  if (length(colnames(x)) < 3)
+  {
+    futile.logger::flog.error("x must have at least three columns: phase, date and register")
+  }
+
+  futile.logger::flog.debug('Checking x contains a date column...')
+  if (!'date' %in% colnames(x)) stop("x must contain date column")
+
+  futile.logger::flog.debug('Checking x contains a phase column...')
+  if (!'phase' %in% colnames(x)) stop("x must contain phase column")
+
+  futile.logger::flog.debug('Checking x does not contain missing values...')
+  if (anyNA(x)) stop("x cannot contain any missing values")
+
+  futile.logger::flog.debug('Checking for the correct number of rows...')
+  if (nrow(x) < 25) {
+    futile.logger::flog.warn("x does not appear to be well formed. nrow(x) should be
+                             greater than 26 as of early 2018.")
+  }
+
+
+
+  futile.logger::flog.info('...passed')
+
+  # User assertr to run statistical tests on the data itself ----
+
+  futile.logger::flog.info("\n***Running statistical checks on input dataframe (x)")
+
+  futile.logger::flog.trace("These tests are implemented using the package assertr see:
+                            https://cran.r-project.org/web/packages/assertr for more details.")
+
+
+  # Check snsible range for year
+
+  futile.logger::flog.debug('Checking years in a sensible range (2015:2025)...')
+
+  if (any(lubridate::year(regreg$date) < 2016)) {
+    futile.logger::flog.warn("The dates are not in a sensible range, have they been
+                             read in correctly?")
+  }
+
+  # hopefully moved beyond RAP by 2025...
+  if (any(lubridate::year(regreg$date) > 2025)) {
+    futile.logger::flog.warn("The dates look dodgy,
+                             are you still using RAP in 2025?")
+  }
+
+  # Check that the correct levels are in phase
+
+  futile.logger::flog.debug('Checking sectors are correct...')
+
+  # Save sectors name lookup for use later
+
+  phase_set <- c(
+    "discovery"    = "Discovery",
+    "alpha"    = "Alpha",
+    "beta"     = "Beta",
+    "live"    = "Live"
+  )
+
+  # Check for outliers ----
+
+  # Could check for outliers here... given our data we can't
+
+  futile.logger::flog.info('...passed')
+
+  # Reset threshold to package default
+  futile.logger::flog.threshold(futile.logger::INFO)
+  # Reset so that log is appended to console (the package default)
+  futile.logger::flog.appender(futile.logger::appender.console())
+
+  # Message required to pass a test
+  message("Checks completed successfully:
+          object of 'phase_date_data' class produced!")
+
+  # EDA
+  # some people like to eyeball stuff
+  if (eda == TRUE) {
+    plot(rev(regreg$date),
+         ylab = "Date published",
+         xlab = "Cumulative count of published registers")
+
+  }
+
+  # Drop unnecessary columns
+  x <- x[, c("register", "phase", "date")]
+  # Define the class here ----
+
+  structure(
+    list(
+      df = x,
+      colnames = colnames(x),
+      type = colnames(x)[!colnames(x) %in% c('date','phase', 'register')],
+      phase_levels = levels(x$phase),
+      phase_set = phase_set,
+      yq = zoo::as.yearqtr(x$date, format = "%Y-%m-%d")
+    ),
+    class = "phase_date_data")
+}
+
+```
+
+rm(list = c("phase_date_data"))
+
+==> devtools::load_all(".")
+==> devtools::document(roclets = c('rd', 'collate', 'namespace'))
+
+x <- DataTidying::phase_date_data(regreg, eda = TRUE)
+
+Checks completed successfully:
+          object of 'phase_date_data' class produced!
+
+# 
+          
+class(x)
+==>     [1] "phase_date_data"
+
+```{r}
+rm(list = c("phase_date_data"))
+
+devtools::load_all(".")
+devtools::document(roclets = c('rd', 'collate', 'namespace'))
+
+x <- DataTidying::phase_date_data(regreg, eda = TRUE)
+
+class(x)
+
+figure_2 <- DataTidying::figure_2
+
+```
+
+
+```{r}
+
+devtools::load_all(".")
+devtools::document(roclets = c('rd', 'collate', 'namespace'))
+
+```
+
+## ----------------------------------------------- ##
+
+## Create a new issue in Github
+FILTER_FOR_TTHTTSRECRUITSTAGES <- TTHTTSRECRUITSTAGES3 %>% 
+   select(c(
+         tolower("ApplicationID"),
+         tolower("CandidateID"),
+         tolower("ApplicationStatusText"),
+         tolower("TidyNINumber"),
+         tolower("VacancyEventID"),
+         tolower("VacancyEventTitleText"),
+         tolower("Vacancy.Status..List."),
+         tolower("Last.Status.Change"),
+         tolower("AgencyAll"),
+         tolower("BusinessGroupAll"),
+         tolower("bg_tth"),
+         tolower("bg_extend"),
+         tolower("BusinessAreaMerged"),
+         tolower("Group.Area"),
+         tolower("Division"),
+         tolower("GradeMoJ"),
+         tolower("promotion"),
+         tolower("Rolling.Campaign"),
+         tolower("PriorityRecruit"),
+         tolower("PriorityorRoll"),
+         tolower("FamilVisit"),
+         tolower("Region"),
+         tolower("GeographicalArea"),
+         tolower("MatchCostCentre"),
+         tolower("CostCentreClean"),
+         tolower("Cost.centre.description"),
+         tolower("HMCTSregions"),
+         tolower("HMPPSAgency"),
+         tolower("HMPPSPrisonType"),
+         tolower("HMPPSRoleTypes"),
+         tolower("BuildingSite"),
+         tolower("AllocFinal"),
+         tolower("Currentemploymentstatus"),
+         tolower("Grade"),
+         tolower("ProcessFinishMonth"),
+         tolower("TimetoSignMonth"),
+         tolower("TimestampVacancyLive"),
+         tolower("SubmissionDateD"),
+         tolower("GamificationTestInProgress"),
+         tolower("AssessmentDaySelected"),
+         tolower("AssessmentDayInvited"),
+         tolower("AssessmentDayBooked"),
+         tolower("TimestampClosedforApplications"),
+         tolower("SelectedforInterview1D"),
+         tolower("InterviewinvitedD"),
+         tolower("InterviewscheduledD"),
+         tolower("Lastbookedinterviewdate"),
+         tolower("ProvisionalOffer"),
+         tolower("OnboardingFormD"),
+         tolower("OnboardingFormSubmittedD"),
+         tolower("PreEmploymentChecksinProgD"),
+         tolower("PreemploymentChecksComplete"),
+         tolower("PreEmploymentChecksContinuedD"),
+         tolower("FormalOfferMade"),
+         tolower("FormalOfferAccepted"),
+         tolower("ProcessFinish"),
+         tolower("TimetoSignDate"),
+         tolower("ResorMeritList"),
+         tolower("MeritListInitial"),
+         tolower("ReserveListInitial"),
+         tolower("CandidateSubmit"),
+         tolower("Sifting"),
+         tolower("RollingSifting"),
+         tolower("PlanningInter"),
+         tolower("BookingInter"),
+         tolower("PauseforInter"),
+         tolower("InterProc"),
+         tolower("ProcResults"),
+         tolower("PauseWaitPreEmpCh"),
+         tolower("TotalPreEmpCh"),
+         tolower("OnboardFormFilled"),
+         tolower("PreempCheckStart"),
+         tolower("PECsProcess"),
+         tolower("PreempCheckExtend"),
+         tolower("PreempCheckFinish"),
+         tolower("TotalTimetoHire"),
+         tolower("CollatingContract"),
+         tolower("SigningContract"),
+         tolower("ContractProcedure"),
+         tolower("MeritListPeriod"),
+         tolower("MeritListContract")
+   )) %>% 
+   filter(!((is.na(TTHTTSRECRUITSTAGES3$totaltimetohire)) | 
+               (is.na(TTHTTSRECRUITSTAGES3$bg_tth)) | 
+               (TTHTTSRECRUITSTAGES3$totaltimetohire < 0)))
+
+## ########################################################################
+FILTER_FOR_TTHTTSRECRUITSTAGES <- dplyr::arrange(
+   FILTER_FOR_TTHTTSRECRUITSTAGES, bg_tth,
+   processfinishmonth, rolling.campaign)
+## ########################################################################
+## 
+## ########################################################################
+st <- forcats::as_factor(c(
+                           "CandidateSubmit",
+                           "Sifting",
+                           "PlanningInter",
+                           "BookingInter",
+                           "PauseforInter",
+                           "InterProc", 
+                           "ProcResults",
+                           "PauseWaitPreEmpCh",
+                           "TotalPreEmpCh",
+                           "TotalTimetoHire",
+                           "OnboardFormFilled",
+                           "PreempCheckStart",
+                           "PECsProcess",
+                           "PreempCheckExtend",
+                           "PreempCheckFinish",
+                           "RollingSifting"))
